@@ -9,7 +9,10 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as categories from "../categories.js";
 import type * as files from "../files.js";
+import type * as providers from "../providers.js";
+import type * as requests from "../requests.js";
 import type * as seed from "../seed.js";
 
 import type {
@@ -20,7 +23,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  categories: typeof categories;
   files: typeof files;
+  providers: typeof providers;
+  requests: typeof requests;
   seed: typeof seed;
 }>;
 

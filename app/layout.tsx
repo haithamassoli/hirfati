@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { ConvexClientProvider } from "@/components/providers/convex-provider";
+import { WebsiteJsonLd } from "@/components/seo/json-ld";
 import "./globals.css";
 
 const ibmPlexArabic = IBM_Plex_Sans_Arabic({
@@ -30,6 +31,12 @@ export const metadata: Metadata = {
     "الزرقاء",
   ],
   authors: [{ name: "Hirfati" }],
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://hirfati.jo"
+  ),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "ar_JO",
@@ -37,6 +44,10 @@ export const metadata: Metadata = {
     title: "حرفتي — سوق الحرفيين في الأردن",
     description:
       "اعثر على أفضل الحرفيين في الأردن. احصل على عروض أسعار مجانية من حرفيين موثوقين.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -58,6 +69,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className="antialiased min-h-screen bg-background text-foreground">
+        <WebsiteJsonLd />
         <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>
     </html>
