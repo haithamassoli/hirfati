@@ -17,6 +17,7 @@ import type * as profile from "../profile.js";
 import type * as providers from "../providers.js";
 import type * as quotes from "../quotes.js";
 import type * as requests from "../requests.js";
+import type * as reviews from "../reviews.js";
 import type * as seed from "../seed.js";
 import type * as services from "../services.js";
 
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   providers: typeof providers;
   quotes: typeof quotes;
   requests: typeof requests;
+  reviews: typeof reviews;
   seed: typeof seed;
   services: typeof services;
 }>;

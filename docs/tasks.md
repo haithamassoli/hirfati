@@ -136,13 +136,13 @@ Allow customers to review providers after job completion.
 
 ### Tasks
 
-- [ ] 7.1 — Build review form: star rating (1–5), text comment, shown after customer confirms job completion
-- [ ] 7.2 — Write Convex mutation for submitting a review (validate: one review per job, only by customer, only after confirmed state)
-- [ ] 7.3 — Write Convex query to compute provider average rating and review count
-- [ ] 7.4 — Display reviews list on provider public profile page (`/providers/[id]`) with rating, comment, reviewer name, and date
-- [ ] 7.5 — Build reviews dashboard page (`/dashboard/reviews`): reviews received (provider view), reviews given (customer view)
-- [ ] 7.6 — Update job status to "reviewed" after review submission
-- [ ] 7.7 — Build star rating display component (read-only and interactive versions)
+- [x] 7.1 — Build review form: star rating (1–5), text comment, shown after customer confirms job completion
+- [x] 7.2 — Write Convex mutation for submitting a review (validate: one review per job, only by customer, only after confirmed state)
+- [x] 7.3 — Write Convex query to compute provider average rating and review count
+- [x] 7.4 — Display reviews list on provider public profile page (`/providers/[id]`) with rating, comment, reviewer name, and date
+- [x] 7.5 — Build reviews dashboard page (`/dashboard/reviews`): reviews received (provider view), reviews given (customer view)
+- [x] 7.6 — Update job status to "reviewed" after review submission
+- [x] 7.7 — Build star rating display component (read-only and interactive versions)
 
 ---
 

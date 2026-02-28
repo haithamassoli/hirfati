@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { Spinner } from "@/components/ui/spinner";
 import { Avatar } from "@/components/ui/avatar";
+import { StarRating, InteractiveStarRating } from "@/components/ui/star-rating";
+import { Textarea } from "@/components/ui/textarea";
 import { JobChat } from "@/components/chat/job-chat";
 import { cityLabels } from "@/lib/constants";
 import {
@@ -68,11 +70,16 @@ export default function JobDetailPage({
   const { id } = use(params);
   const isValidId = /^[a-z0-9]{32}$/.test(id) || id.startsWith("k");
   const job = useQuery(api.jobs.getDetail, isValidId ? { id: id as Id<"jobs"> } : "skip");
+  const review = useQuery(api.reviews.getByJob, isValidId ? { jobId: id as Id<"jobs"> } : "skip");
   const transitionStatus = useMutation(api.jobs.transitionStatus);
   const respondToDirectHire = useMutation(api.jobs.respondToDirectHire);
+  const submitReview = useMutation(api.reviews.submit);
 
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   const handleTransition = useCallback(
     async (newStatus: string) => {
@@ -109,6 +116,24 @@ export default function JobDetailPage({
     },
     [respondToDirectHire, id]
   );
+
+  const handleSubmitReview = useCallback(async () => {
+    if (!reviewRating || !reviewComment.trim()) return;
+    setIsSubmittingReview(true);
+    try {
+      await submitReview({
+        jobId: id as Id<"jobs">,
+        rating: reviewRating,
+        comment: reviewComment,
+      });
+      setReviewRating(0);
+      setReviewComment("");
+    } catch (err: any) {
+      alert(err.message || "حدث خطأ في إرسال التقييم");
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  }, [submitReview, id, reviewRating, reviewComment]);
 
   if (job === undefined && isValidId) {
     return (
@@ -393,6 +418,88 @@ export default function JobDetailPage({
                       </Button>
                     );
                   })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Review Form (customer only, confirmed state, no existing review) */}
+          {job.status === "confirmed" && job.isCustomer && !review && (
+            <Card className="overflow-hidden">
+              <div className="bg-gradient-to-l from-accent-50 to-primary-50 px-5 py-4 border-b border-border">
+                <h2 className="font-semibold text-foreground flex items-center gap-2">
+                  <Star className="h-5 w-5 text-accent-500" />
+                  قيّم تجربتك
+                </h2>
+                <p className="text-xs text-neutral-500 mt-1">
+                  شاركنا رأيك في جودة الخدمة المقدمة
+                </p>
+              </div>
+              <CardContent className="space-y-5">
+                <div className="flex flex-col items-center py-2">
+                  <InteractiveStarRating
+                    value={reviewRating}
+                    onChange={setReviewRating}
+                    size="xl"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    تعليقك على الخدمة
+                  </label>
+                  <Textarea
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    placeholder="اكتب تعليقك هنا... مثال: عمل ممتاز وإنجاز سريع"
+                    rows={3}
+                  />
+                </div>
+
+                <Button
+                  variant="accent"
+                  size="lg"
+                  className="w-full"
+                  disabled={!reviewRating || !reviewComment.trim() || isSubmittingReview}
+                  isLoading={isSubmittingReview}
+                  onClick={handleSubmitReview}
+                >
+                  <Star className="h-4 w-4" />
+                  إرسال التقييم
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Review Display (after review is submitted) */}
+          {review && (
+            <Card className="overflow-hidden">
+              <div className="bg-gradient-to-l from-accent-50 to-primary-50 px-5 py-4 border-b border-border">
+                <h2 className="font-semibold text-foreground flex items-center gap-2">
+                  <Star className="h-5 w-5 text-accent-500" />
+                  التقييم
+                </h2>
+              </div>
+              <CardContent>
+                <div className="flex items-start gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <StarRating rating={review.rating} size="md" showValue={false} />
+                      <span className="text-sm font-medium text-neutral-500">
+                        بواسطة {review.reviewerName}
+                      </span>
+                    </div>
+                    <p className="text-sm text-neutral-600 leading-relaxed">
+                      {review.comment}
+                    </p>
+                    <p className="text-xs text-neutral-400 mt-2">
+                      {new Date(review._creationTime).toLocaleDateString("ar-JO", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

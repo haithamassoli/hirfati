@@ -81,14 +81,17 @@ export const getById = query({
       .withIndex("by_providerId", (q) => q.eq("providerId", id))
       .collect();
 
-    // Get reviewer names
+    // Get reviewer names and avatars
     const reviewsWithReviewer = await Promise.all(
       reviews.map(async (review) => {
         const reviewer = await ctx.db.get(review.reviewerId);
+        const reviewerAvatarUrl = reviewer?.avatarStorageId
+          ? await ctx.storage.getUrl(reviewer.avatarStorageId)
+          : reviewer?.avatarUrl;
         return {
           ...review,
           reviewerName: reviewer?.name ?? "مستخدم",
-          reviewerAvatar: reviewer?.avatarUrl,
+          reviewerAvatar: reviewerAvatarUrl ?? undefined,
         };
       })
     );
