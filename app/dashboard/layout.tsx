@@ -94,99 +94,140 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 right-0 z-50 w-72 bg-surface border-l border-border flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto",
+          "fixed inset-y-0 right-0 z-50 w-72 bg-surface border-l border-border transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto relative overflow-hidden",
           sidebarOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
-        {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-border">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary-500 flex items-center justify-center">
-              <Wrench className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-lg font-bold text-foreground">حرفتي</span>
-          </Link>
-          <button
-            className="lg:hidden p-1.5 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors cursor-pointer"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="إغلاق القائمة"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        <div className="pointer-events-none absolute -top-6 right-0 h-32 w-32 translate-x-10 rounded-full bg-primary-100/70 blur-3xl" />
+        <div className="pointer-events-none absolute top-32 left-0 h-24 w-24 -translate-x-10 rounded-full bg-accent-100/60 blur-3xl" />
 
-        {/* User info */}
-        {user && (
-          <div className="px-6 py-4 border-b border-border">
-            <div className="flex items-center gap-3">
-              <Avatar
-                src={user.avatarUrl}
-                alt={user.name}
-                size="md"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground truncate">
-                  {user.name}
-                </p>
-                <Badge
-                  variant={user.isProvider ? "primary" : "default"}
-                  className="mt-0.5"
-                >
-                  {user.isProvider ? "حرفي" : "عميل"}
-                </Badge>
+        <div className="relative z-10 flex h-full flex-col">
+          {/* Logo */}
+          <div className="flex items-center justify-between h-16 px-6 border-b border-border">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-primary-500/90 flex items-center justify-center shadow-sm">
+                <Wrench className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <span className="text-lg font-bold text-foreground">حرفتي</span>
+                <p className="text-xs text-neutral-500">لوحة التحكم</p>
+              </div>
+            </Link>
+            <button
+              className="lg:hidden p-1.5 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors cursor-pointer"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="إغلاق القائمة"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* User info */}
+          {user && (
+            <div className="px-6 py-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <Avatar
+                  src={user.avatarUrl}
+                  alt={user.name}
+                  size="md"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {user.name}
+                  </p>
+                  <Badge
+                    variant={user.isProvider ? "primary" : "default"}
+                    className="mt-0.5"
+                  >
+                    {user.isProvider ? "حرفي" : "عميل"}
+                  </Badge>
+                </div>
               </div>
             </div>
+          )}
+
+          {/* Nav links */}
+          <nav className="flex-1 px-3 py-4 overflow-y-auto">
+            <p className="px-3 text-xs font-semibold text-neutral-400">القائمة</p>
+            <div className="mt-3 space-y-1">
+              {sidebarLinks
+                .filter((link) => {
+                  const role = user?.isProvider ? "provider" : "customer";
+                  return (link.roles as readonly string[]).includes(role);
+                })
+                .map((link) => {
+                  const isActive =
+                    link.href === "/dashboard"
+                      ? pathname === "/dashboard"
+                      : pathname.startsWith(link.href);
+
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setSidebarOpen(false)}
+                      aria-current={isActive ? "page" : undefined}
+                      className={cn(
+                        "group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer",
+                        isActive
+                          ? "bg-primary-50 text-primary-700 shadow-sm"
+                          : "text-neutral-600 hover:bg-neutral-100 hover:text-foreground"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "flex h-9 w-9 items-center justify-center rounded-xl transition-colors",
+                          isActive
+                            ? "bg-primary-100 text-primary-700"
+                            : "bg-neutral-100 text-neutral-500 group-hover:bg-white group-hover:text-foreground"
+                        )}
+                      >
+                        <link.icon className="h-4 w-4" />
+                      </span>
+                      <span className="flex-1">{link.label}</span>
+                      <span
+                        className={cn(
+                          "absolute right-2 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-primary-500 transition-opacity",
+                          isActive
+                            ? "opacity-100"
+                            : "opacity-0 group-hover:opacity-40"
+                        )}
+                      />
+                    </Link>
+                  );
+                })}
+            </div>
+          </nav>
+
+          {/* Bottom actions */}
+          <div className="px-3 py-4 border-t border-border space-y-1">
+            <Link
+              href="/"
+              className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-neutral-600 hover:bg-neutral-100 hover:text-foreground transition-colors cursor-pointer"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500 group-hover:bg-white group-hover:text-foreground transition-colors">
+                <ChevronLeft className="h-4 w-4 rotate-180" />
+              </span>
+              <span>العودة للموقع</span>
+            </Link>
+            <button
+              onClick={() =>
+                authClient.signOut({
+                  fetchOptions: {
+                    onSuccess: () => {
+                      window.location.href = "/";
+                    },
+                  },
+                })
+              }
+              className="w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-error hover:bg-error-light transition-colors cursor-pointer"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-error-light text-error">
+                <LogOut className="h-4 w-4" />
+              </span>
+              <span>تسجيل الخروج</span>
+            </button>
           </div>
-        )}
-
-        {/* Nav links */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {sidebarLinks
-            .filter((link) => {
-              const role = user?.isProvider ? "provider" : "customer";
-              return (link.roles as readonly string[]).includes(role);
-            })
-            .map((link) => {
-            const isActive =
-              link.href === "/dashboard"
-                ? pathname === "/dashboard"
-                : pathname.startsWith(link.href);
-
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary-50 text-primary-700"
-                    : "text-neutral-600 hover:bg-neutral-100 hover:text-foreground"
-                )}
-              >
-                <link.icon className="h-5 w-5 shrink-0" />
-                <span>{link.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Bottom actions */}
-        <div className="px-3 py-4 border-t border-border space-y-1">
-          <Link
-            href="/"
-            className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-neutral-600 hover:bg-neutral-100 hover:text-foreground transition-colors"
-          >
-            <ChevronLeft className="h-5 w-5 shrink-0 rotate-180" />
-            <span>العودة للموقع</span>
-          </Link>
-          <button
-            onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/"; } } })}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-error hover:bg-error-light transition-colors cursor-pointer"
-          >
-            <LogOut className="h-5 w-5 shrink-0" />
-            <span>تسجيل الخروج</span>
-          </button>
         </div>
       </aside>
 

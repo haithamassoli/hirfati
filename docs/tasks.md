@@ -95,17 +95,17 @@ Implement the complete job state machine and job detail page.
 
 ### Tasks
 
-- [ ] 5.1 — Define job status enum: requested, quoted, accepted, in_progress, completed, confirmed, reviewed, cancelled, disputed
-- [ ] 5.2 — Write Convex mutation for job state transitions with validation (enforce valid transitions only)
-- [ ] 5.3 — Build job detail page (`/dashboard/jobs/[id]`) showing: status badge, job info, provider/customer info, timeline of status changes, and action buttons
-- [ ] 5.4 — Implement "Mark as In Progress" action (either party can trigger, only from accepted state)
-- [ ] 5.5 — Implement "Mark as Complete" action (provider only, from in_progress state)
-- [ ] 5.6 — Implement "Confirm Completion" action (customer only, from completed state)
-- [ ] 5.7 — Implement "Cancel Job" action (either party, only before in_progress state)
-- [ ] 5.8 — Implement "Raise Dispute" action (either party, from in_progress or completed state)
-- [ ] 5.9 — Build jobs listing page (`/dashboard/jobs`) with tabs: active jobs, past jobs
-- [ ] 5.10 — Implement direct hire flow: customer sends request directly to a specific provider from their profile page, creating a job in "requested" state
-- [ ] 5.11 — Write Convex query for job detail with all related data (request, quote, provider, customer, messages)
+- [x] 5.1 — Define job status enum: requested, quoted, accepted, in_progress, completed, confirmed, reviewed, cancelled, disputed
+- [x] 5.2 — Write Convex mutation for job state transitions with validation (enforce valid transitions only)
+- [x] 5.3 — Build job detail page (`/dashboard/jobs/[id]`) showing: status badge, job info, provider/customer info, timeline of status changes, and action buttons
+- [x] 5.4 — Implement "Mark as In Progress" action (either party can trigger, only from accepted state)
+- [x] 5.5 — Implement "Mark as Complete" action (provider only, from in_progress state)
+- [x] 5.6 — Implement "Confirm Completion" action (customer only, from completed state)
+- [x] 5.7 — Implement "Cancel Job" action (either party, only before in_progress state)
+- [x] 5.8 — Implement "Raise Dispute" action (either party, from in_progress or completed state)
+- [x] 5.9 — Build jobs listing page (`/dashboard/jobs`) with tabs: active jobs, past jobs
+- [x] 5.10 — Implement direct hire flow: customer sends request directly to a specific provider from their profile page, creating a job in "requested" state
+- [x] 5.11 — Write Convex query for job detail with all related data (request, quote, provider, customer, messages)
 
 ---
 
