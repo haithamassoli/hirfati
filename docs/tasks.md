@@ -8,17 +8,17 @@ Set up the Next.js project with App Router, TailwindCSS, Convex backend, Better-
 
 ### Tasks
 
-- [ ] 1.1 — Initialize Next.js project with App Router and TypeScript
-- [ ] 1.2 — Configure TailwindCSS with RTL support and Arabic typography (font, direction)
-- [ ] 1.3 — Set up Convex backend and connect to the Next.js app
-- [ ] 1.4 — Define Convex schema for all tables: users, categories, services, requests, quotes, jobs, messages, reviews, premium_orders
-- [ ] 1.5 — Set up Better-Auth with Google OAuth (sign-in, sign-out, session management, httpOnly cookies)
-- [ ] 1.6 — Build root layout with RTL `<html dir="rtl" lang="ar">`, global styles, and responsive container and use IBM_Plex_Sans_Arabic font.
-- [ ] 1.7 — Create shared UI components (Button, Input, Card, Modal, Avatar, Badge, Spinner)
-- [ ] 1.8 — Configure PWA basics: `manifest.json` with app name, icons, theme color
-- [ ] 1.9 — Set up Convex file storage for image uploads (avatar, portfolio, request photos)
-- [ ] 1.10 — Create auth guard middleware for protected `/dashboard` routes
-- [ ] 1.11 — Seed initial trade categories and subcategories into Convex (Plumbing, Electrical, Carpentry, Blacksmithing, Painting, HVAC, Tiling & Flooring, General Maintenance)
+- [x] 1.1 — Initialize Next.js project with App Router and TypeScript
+- [x] 1.2 — Configure TailwindCSS with RTL support and Arabic typography (font, direction)
+- [x] 1.3 — Set up Convex backend and connect to the Next.js app
+- [x] 1.4 — Define Convex schema for all tables: users, categories, services, requests, quotes, jobs, messages, reviews, premium_orders
+- [x] 1.5 — Set up Better-Auth with Google OAuth (sign-in, sign-out, session management, httpOnly cookies)
+- [x] 1.6 — Build root layout with RTL `<html dir="rtl" lang="ar">`, global styles, and responsive container and use IBM_Plex_Sans_Arabic font.
+- [x] 1.7 — Create shared UI components (Button, Input, Card, Modal, Avatar, Badge, Spinner)
+- [x] 1.8 — Configure PWA basics: `manifest.json` with app name, icons, theme color
+- [x] 1.9 — Set up Convex file storage for image uploads (avatar, portfolio, request photos)
+- [x] 1.10 — Create auth guard middleware for protected `/dashboard` routes
+- [x] 1.11 — Seed initial trade categories and subcategories into Convex (Plumbing, Electrical, Carpentry, Blacksmithing, Painting, HVAC, Tiling & Flooring, General Maintenance)
 
 ---
 
@@ -30,18 +30,18 @@ Build all guest-accessible, server-rendered pages with SEO optimization.
 
 ### Tasks
 
-- [ ] 2.1 — Build landing page (`/`) with search bar, top categories grid, and featured providers section
-- [ ] 2.2 — Build categories listing page (`/categories`) showing all trade categories with icons/images
-- [ ] 2.3 — Build category detail page (`/categories/[slug]`) with providers and listings filtered by city (Amman, Irbid, Zarqa)
-- [ ] 2.4 — Build provider profile page (`/providers/[id]`) with bio, portfolio gallery, services list, and reviews
-- [ ] 2.5 — Build open requests listing page (`/requests`) browsable by category and city
-- [ ] 2.6 — Build single request detail page (`/requests/[id]`) with description, photos, budget, and quote count
-- [ ] 2.7 — Build about page (`/about`) with platform information
-- [ ] 2.8 — Implement dynamic `<title>`, `<meta description>`, and Open Graph tags for all public pages
-- [ ] 2.9 — Add JSON-LD structured data: LocalBusiness schema on provider profiles, Service schema on listings
-- [ ] 2.10 — Generate sitemap for all public routes
-- [ ] 2.11 — Implement clean URL slugs for categories (`/categories/plumbing` not `/categories/123`)
-- [ ] 2.12 — Add canonical URLs to all public pages
+- [x] 2.1 — Build landing page (`/`) with search bar, top categories grid, and featured providers section
+- [x] 2.2 — Build categories listing page (`/categories`) showing all trade categories with icons/images
+- [x] 2.3 — Build category detail page (`/categories/[slug]`) with providers and listings filtered by city (Amman, Irbid, Zarqa)
+- [x] 2.4 — Build provider profile page (`/providers/[id]`) with bio, portfolio gallery, services list, and reviews
+- [x] 2.5 — Build open requests listing page (`/requests`) browsable by category and city
+- [x] 2.6 — Build single request detail page (`/requests/[id]`) with description, photos, budget, and quote count
+- [x] 2.7 — Build about page (`/about`) with platform information
+- [x] 2.8 — Implement dynamic `<title>`, `<meta description>`, and Open Graph tags for all public pages
+- [x] 2.9 — Add JSON-LD structured data: LocalBusiness schema on provider profiles, Service schema on listings
+- [x] 2.10 — Generate sitemap for all public routes
+- [x] 2.11 — Implement clean URL slugs for categories (`/categories/plumbing` not `/categories/123`)
+- [x] 2.12 — Add canonical URLs to all public pages
 
 ---
 
@@ -53,15 +53,15 @@ Allow authenticated providers to create/edit their profile and manage service li
 
 ### Tasks
 
-- [ ] 3.1 — Build provider profile edit page (`/dashboard/profile`) with fields: display name, avatar upload, bio (max 500 chars), trade categories (multi-select), service area (city picker)
-- [ ] 3.2 — Build portfolio management UI: upload photos with captions, reorder, delete
-- [ ] 3.3 — Write Convex mutations for creating/updating provider profile
-- [ ] 3.4 — Build service listing CRUD page (`/dashboard/services`): create, edit, delete services
-- [ ] 3.5 — Service form: title, description, category select, price type (fixed/flexible), price in JOD
-- [ ] 3.6 — Write Convex mutations for service CRUD (create, update, delete)
-- [ ] 3.7 — Write Convex queries to fetch provider profile with services, portfolio, and computed rating
-- [ ] 3.8 — Image upload and compression pipeline for avatar and portfolio photos via Convex file storage
-- [ ] 3.9 — Validate that provider profile is complete before services appear in public search
+- [x] 3.1 — Build provider profile edit page (`/dashboard/profile`) with fields: display name, avatar upload, bio (max 500 chars), trade categories (multi-select), service area (city picker)
+- [x] 3.2 — Build portfolio management UI: upload photos with captions, reorder, delete
+- [x] 3.3 — Write Convex mutations for creating/updating provider profile
+- [x] 3.4 — Build service listing CRUD page (`/dashboard/services`): create, edit, delete services
+- [x] 3.5 — Service form: title, description, category select, price type (fixed/flexible), price in JOD
+- [x] 3.6 — Write Convex mutations for service CRUD (create, update, delete)
+- [x] 3.7 — Write Convex queries to fetch provider profile with services, portfolio, and computed rating
+- [x] 3.8 — Image upload and compression pipeline for avatar and portfolio photos via Convex file storage
+- [x] 3.9 — Validate that provider profile is complete before services appear in public search
 
 ---
 
