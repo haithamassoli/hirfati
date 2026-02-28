@@ -117,14 +117,14 @@ Build job-scoped real-time messaging.
 
 ### Tasks
 
-- [ ] 6.1 — Define messages table schema: jobId, senderId, content (text), imageId (optional), createdAt
-- [ ] 6.2 — Write Convex mutation for sending a text message (validate: user is part of the job, job is in a chat-eligible state)
-- [ ] 6.3 — Write Convex mutation for sending an image message via file storage
-- [ ] 6.4 — Write Convex real-time query (subscription) for fetching messages by jobId, ordered by createdAt
-- [ ] 6.5 — Build chat UI component within job detail page: message list with auto-scroll, text input, image upload button, send button
-- [ ] 6.6 — Implement chat access control: chat unlocked only after quote submitted or direct request sent
-- [ ] 6.7 — Display sender avatar, name, and timestamp on each message
-- [ ] 6.8 — Handle image preview and full-size view in chat
+- [x] 6.1 — Define messages table schema: jobId, senderId, content (text), imageId (optional), createdAt
+- [x] 6.2 — Write Convex mutation for sending a text message (validate: user is part of the job, job is in a chat-eligible state)
+- [x] 6.3 — Write Convex mutation for sending an image message via file storage
+- [x] 6.4 — Write Convex real-time query (subscription) for fetching messages by jobId, ordered by createdAt
+- [x] 6.5 — Build chat UI component within job detail page: message list with auto-scroll, text input, image upload button, send button
+- [x] 6.6 — Implement chat access control: chat unlocked only after quote submitted or direct request sent
+- [x] 6.7 — Display sender avatar, name, and timestamp on each message
+- [x] 6.8 — Handle image preview and full-size view in chat
 
 ---
 

@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { Spinner } from "@/components/ui/spinner";
 import { Avatar } from "@/components/ui/avatar";
+import { JobChat } from "@/components/chat/job-chat";
 import { cityLabels } from "@/lib/constants";
 import {
   ArrowRight,
@@ -396,6 +397,24 @@ export default function JobDetailPage({
               </CardContent>
             </Card>
           )}
+
+          {/* Chat */}
+          <Card>
+            <CardContent className="!p-0">
+              <div className="px-5 py-4 border-b border-border">
+                <h2 className="font-semibold text-foreground flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-primary-500" />
+                  المحادثة
+                </h2>
+              </div>
+              <JobChat
+                jobId={id as Id<"jobs">}
+                isChatEligible={
+                  !["cancelled"].includes(job.status)
+                }
+              />
+            </CardContent>
+          </Card>
         </div>
 
         {/* Sidebar */}
