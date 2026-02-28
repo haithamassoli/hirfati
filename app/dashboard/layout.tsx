@@ -18,6 +18,8 @@ import {
   ChevronLeft,
   Menu,
   X,
+  FileText,
+  Search,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
@@ -26,16 +28,31 @@ const sidebarLinks = [
     href: "/dashboard",
     label: "الرئيسية",
     icon: LayoutDashboard,
+    roles: ["customer", "provider"] as const,
   },
   {
     href: "/dashboard/profile",
     label: "الملف الشخصي",
     icon: User,
+    roles: ["customer", "provider"] as const,
   },
   {
     href: "/dashboard/services",
     label: "خدماتي",
     icon: Briefcase,
+    roles: ["provider"] as const,
+  },
+  {
+    href: "/dashboard/requests",
+    label: "طلباتي",
+    icon: FileText,
+    roles: ["customer"] as const,
+  },
+  {
+    href: "/dashboard/browse-requests",
+    label: "تصفح الطلبات",
+    icon: Search,
+    roles: ["provider"] as const,
   },
 ];
 
@@ -117,7 +134,12 @@ export default function DashboardLayout({
 
         {/* Nav links */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {sidebarLinks.map((link) => {
+          {sidebarLinks
+            .filter((link) => {
+              const role = user?.isProvider ? "provider" : "customer";
+              return (link.roles as readonly string[]).includes(role);
+            })
+            .map((link) => {
             const isActive =
               link.href === "/dashboard"
                 ? pathname === "/dashboard"

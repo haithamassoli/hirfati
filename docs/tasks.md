@@ -73,17 +73,17 @@ Enable customers to post requests and providers to submit quotes.
 
 ### Tasks
 
-- [ ] 4.1 — Build "Post a Request" form: title, description, category select, city select, budget min/max, photo upload (optional)
-- [ ] 4.2 — Write Convex mutation for creating a service request
-- [ ] 4.3 — Build customer's "My Requests" page (`/dashboard/requests`) listing posted requests with status
-- [ ] 4.4 — Build provider's "Browse Requests" view showing open requests filtered by city and category matching provider's profile
-- [ ] 4.5 — Build quote submission form: price (JOD), estimated duration, message
-- [ ] 4.6 — Write Convex mutation for submitting a quote (validate: one quote per provider per request)
-- [ ] 4.7 — Build request detail view for customers showing all received quotes with provider info
-- [ ] 4.8 — Implement accept/reject quote actions for customers
-- [ ] 4.9 — Write Convex mutation: accepting a quote creates a job record and marks request as "assigned"
-- [ ] 4.10 — Write Convex mutation: allow providers to withdraw their quote
-- [ ] 4.11 — Write Convex queries for request listing with filters (city, category, status)
+- [x] 4.1 — Build "Post a Request" form: title, description, category select, city select, budget min/max, photo upload (optional)
+- [x] 4.2 — Write Convex mutation for creating a service request
+- [x] 4.3 — Build customer's "My Requests" page (`/dashboard/requests`) listing posted requests with status
+- [x] 4.4 — Build provider's "Browse Requests" view showing open requests filtered by city and category matching provider's profile
+- [x] 4.5 — Build quote submission form: price (JOD), estimated duration, message
+- [x] 4.6 — Write Convex mutation for submitting a quote (validate: one quote per provider per request)
+- [x] 4.7 — Build request detail view for customers showing all received quotes with provider info
+- [x] 4.8 — Implement accept/reject quote actions for customers
+- [x] 4.9 — Write Convex mutation: accepting a quote creates a job record and marks request as "assigned"
+- [x] 4.10 — Write Convex mutation: allow providers to withdraw their quote
+- [x] 4.11 — Write Convex queries for request listing with filters (city, category, status)
 
 ---
 
