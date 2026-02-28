@@ -1,15 +1,12 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Modal } from "@/components/ui/modal";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "@/components/ui/star-rating";
 import { Spinner } from "@/components/ui/spinner";
 import { cityLabels } from "@/lib/constants";
@@ -22,12 +19,15 @@ import {
   CheckCircle2,
   MessageSquare,
   Star,
-  Send,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { use, useState, useCallback } from "react";
+import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
-import { use, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Modal } from "@/components/ui/modal";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export default function ProviderProfilePage({
@@ -36,30 +36,30 @@ export default function ProviderProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const router = useRouter();
-  const provider = useQuery(api.providers.getById, {
-    id: id as Id<"users">,
-  });
-  const { data: session } = authClient.useSession();
-  const directHire = useMutation(api.jobs.directHire);
+  const isValidId = /^[a-z0-9]{32}$/.test(id) || id.startsWith("k");
+  const provider = useQuery(
+    api.providers.getById,
+    isValidId ? { id: id as Id<"users"> } : "skip"
+  );
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showHireModal, setShowHireModal] = useState(false);
-  const [hireForm, setHireForm] = useState({
-    title: "",
-    description: "",
-    price: "",
-  });
+  const [hireTitle, setHireTitle] = useState("");
+  const [hireDescription, setHireDescription] = useState("");
+  const [hirePrice, setHirePrice] = useState("");
   const [hireLoading, setHireLoading] = useState(false);
+  const directHire = useMutation(api.jobs.directHire);
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
 
-  async function handleDirectHire() {
-    if (!hireForm.title || !hireForm.description || !hireForm.price) return;
+  const handleDirectHire = useCallback(async () => {
+    if (!hireTitle.trim() || !hireDescription.trim()) return;
     setHireLoading(true);
     try {
       const jobId = await directHire({
         providerId: id as Id<"users">,
-        title: hireForm.title,
-        description: hireForm.description,
-        price: Number(hireForm.price),
+        title: hireTitle,
+        description: hireDescription,
+        price: hirePrice ? Number(hirePrice) : undefined,
       });
       setShowHireModal(false);
       router.push(`/dashboard/jobs/${jobId}`);
@@ -68,20 +68,9 @@ export default function ProviderProfilePage({
     } finally {
       setHireLoading(false);
     }
-  }
+  }, [directHire, id, hireTitle, hireDescription, hirePrice, router]);
 
-  function handleHireClick() {
-    if (!session) {
-      authClient.signIn.social({
-        provider: "google",
-        callbackURL: `/providers/${id}`,
-      });
-      return;
-    }
-    setShowHireModal(true);
-  }
-
-  if (provider === undefined) {
+  if (provider === undefined && isValidId) {
     return (
       <div className="min-h-screen">
         <Navbar />
@@ -93,7 +82,7 @@ export default function ProviderProfilePage({
     );
   }
 
-  if (provider === null) {
+  if (!provider) {
     return (
       <div className="min-h-screen">
         <Navbar />
@@ -237,9 +226,18 @@ export default function ProviderProfilePage({
               <Button
                 variant="primary"
                 size="lg"
-                onClick={handleHireClick}
+                onClick={() => {
+                  if (session) {
+                    setShowHireModal(true);
+                  } else {
+                    authClient.signIn.social({
+                      provider: "google",
+                      callbackURL: `/providers/${id}`,
+                    });
+                  }
+                }}
               >
-                <Send className="h-5 w-5" />
+                <MessageSquare className="h-5 w-5" />
                 طلب خدمة مباشرة
               </Button>
             </div>
@@ -456,15 +454,84 @@ export default function ProviderProfilePage({
                 variant="primary"
                 size="lg"
                 className="w-full"
-                onClick={handleHireClick}
+                onClick={() => {
+                  if (session) {
+                    setShowHireModal(true);
+                  } else {
+                    authClient.signIn.social({
+                      provider: "google",
+                      callbackURL: `/providers/${id}`,
+                    });
+                  }
+                }}
               >
-                <Send className="h-5 w-5" />
+                <MessageSquare className="h-5 w-5" />
                 طلب خدمة من هذا الحرفي
               </Button>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Direct Hire Modal */}
+      <Modal
+        isOpen={showHireModal}
+        onClose={() => setShowHireModal(false)}
+        title={`طلب خدمة من ${provider.name}`}
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              عنوان الطلب <span className="text-error">*</span>
+            </label>
+            <Input
+              value={hireTitle}
+              onChange={(e) => setHireTitle(e.target.value)}
+              placeholder="مثال: تصليح أنابيب المطبخ"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              وصف الطلب <span className="text-error">*</span>
+            </label>
+            <Textarea
+              value={hireDescription}
+              onChange={(e) => setHireDescription(e.target.value)}
+              placeholder="اشرح ما تحتاجه بالتفصيل..."
+              rows={4}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              الميزانية المقترحة (د.أ) <span className="text-neutral-400 text-xs">(اختياري)</span>
+            </label>
+            <Input
+              type="number"
+              value={hirePrice}
+              onChange={(e) => setHirePrice(e.target.value)}
+              placeholder="0"
+              min={0}
+            />
+          </div>
+          <div className="flex gap-3 justify-end pt-2">
+            <Button
+              variant="secondary"
+              onClick={() => setShowHireModal(false)}
+              disabled={hireLoading}
+            >
+              إلغاء
+            </Button>
+            <Button
+              variant="primary"
+              isLoading={hireLoading}
+              disabled={!hireTitle.trim() || !hireDescription.trim()}
+              onClick={handleDirectHire}
+            >
+              إرسال الطلب
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Lightbox */}
       {selectedImage && (
@@ -488,73 +555,6 @@ export default function ProviderProfilePage({
           />
         </div>
       )}
-
-      {/* Direct Hire Modal */}
-      <Modal
-        isOpen={showHireModal}
-        onClose={() => setShowHireModal(false)}
-        title={`طلب خدمة من ${provider.name}`}
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-              عنوان الخدمة المطلوبة
-            </label>
-            <Input
-              placeholder="مثال: تصليح أنابيب المطبخ"
-              value={hireForm.title}
-              onChange={(e) =>
-                setHireForm((f) => ({ ...f, title: e.target.value }))
-              }
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-              وصف تفصيلي
-            </label>
-            <Textarea
-              placeholder="صف المشكلة أو الخدمة التي تحتاجها بالتفصيل..."
-              rows={4}
-              value={hireForm.description}
-              onChange={(e) =>
-                setHireForm((f) => ({ ...f, description: e.target.value }))
-              }
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-              الميزانية المقترحة (د.أ)
-            </label>
-            <Input
-              type="number"
-              placeholder="50"
-              min={1}
-              value={hireForm.price}
-              onChange={(e) =>
-                setHireForm((f) => ({ ...f, price: e.target.value }))
-              }
-            />
-          </div>
-          <div className="flex gap-3 justify-end pt-2">
-            <Button variant="ghost" onClick={() => setShowHireModal(false)}>
-              إلغاء
-            </Button>
-            <Button
-              variant="primary"
-              disabled={
-                hireLoading ||
-                !hireForm.title ||
-                !hireForm.description ||
-                !hireForm.price
-              }
-              onClick={handleDirectHire}
-            >
-              {hireLoading ? <Spinner size="sm" /> : <Send className="h-4 w-4" />}
-              إرسال الطلب
-            </Button>
-          </div>
-        </div>
-      </Modal>
 
       <Footer />
     </div>

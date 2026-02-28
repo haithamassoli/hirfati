@@ -30,12 +30,14 @@ export default function RequestDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const request = useQuery(api.requests.getById, {
-    id: id as Id<"requests">,
-  });
+  const isValidId = /^[a-z0-9]{32}$/.test(id) || id.startsWith("k");
+  const request = useQuery(
+    api.requests.getById,
+    isValidId ? { id: id as Id<"requests"> } : "skip"
+  );
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  if (request === undefined) {
+  if (request === undefined && isValidId) {
     return (
       <div className="min-h-screen">
         <Navbar />
@@ -47,7 +49,7 @@ export default function RequestDetailPage({
     );
   }
 
-  if (request === null) {
+  if (!request) {
     return (
       <div className="min-h-screen">
         <Navbar />

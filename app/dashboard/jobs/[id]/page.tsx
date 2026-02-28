@@ -2,109 +2,58 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { Spinner } from "@/components/ui/spinner";
+import { Avatar } from "@/components/ui/avatar";
 import { cityLabels } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 import {
-  ChevronRight,
+  ArrowRight,
   Clock,
+  MapPin,
+  Banknote,
   CheckCircle2,
   XCircle,
   AlertTriangle,
   Star,
-  Banknote,
-  MapPin,
   Play,
-  Flag,
+  UserCheck,
   MessageSquare,
-  ArrowDown,
+  Calendar,
   User,
+  Briefcase,
+  FileText,
+  Ban,
+  Flag,
 } from "lucide-react";
 import Link from "next/link";
-import { use, useState } from "react";
+import { use, useState, useCallback } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
-
-// ──────────────────────────────────────────────
-// Status configuration
-// ──────────────────────────────────────────────
 
 const statusConfig: Record<
   string,
-  {
-    label: string;
-    color: string;
-    bgColor: string;
-    icon: React.ElementType;
-  }
+  { label: string; variant: "default" | "primary" | "success" | "warning" | "error" | "info" | "accent"; icon: typeof Clock; color: string }
 > = {
-  requested: {
-    label: "بانتظار القبول",
-    color: "text-amber-700",
-    bgColor: "bg-amber-50 border-amber-200",
-    icon: Clock,
-  },
-  quoted: {
-    label: "تم تقديم عرض",
-    color: "text-primary-700",
-    bgColor: "bg-primary-50 border-primary-200",
-    icon: Clock,
-  },
-  accepted: {
-    label: "تم القبول",
-    color: "text-emerald-700",
-    bgColor: "bg-emerald-50 border-emerald-200",
-    icon: CheckCircle2,
-  },
-  in_progress: {
-    label: "قيد التنفيذ",
-    color: "text-blue-700",
-    bgColor: "bg-blue-50 border-blue-200",
-    icon: Play,
-  },
-  completed: {
-    label: "مكتمل",
-    color: "text-emerald-700",
-    bgColor: "bg-emerald-50 border-emerald-200",
-    icon: CheckCircle2,
-  },
-  confirmed: {
-    label: "تم التأكيد",
-    color: "text-emerald-700",
-    bgColor: "bg-emerald-50 border-emerald-200",
-    icon: CheckCircle2,
-  },
-  reviewed: {
-    label: "تم التقييم",
-    color: "text-neutral-700",
-    bgColor: "bg-neutral-50 border-neutral-200",
-    icon: Star,
-  },
-  cancelled: {
-    label: "ملغي",
-    color: "text-red-700",
-    bgColor: "bg-red-50 border-red-200",
-    icon: XCircle,
-  },
-  disputed: {
-    label: "متنازع عليه",
-    color: "text-amber-700",
-    bgColor: "bg-amber-50 border-amber-200",
-    icon: AlertTriangle,
-  },
+  requested: { label: "بانتظار الرد", variant: "info", icon: Clock, color: "text-blue-500" },
+  quoted: { label: "تم التسعير", variant: "info", icon: Banknote, color: "text-blue-500" },
+  accepted: { label: "مقبولة", variant: "primary", icon: CheckCircle2, color: "text-primary-500" },
+  in_progress: { label: "قيد التنفيذ", variant: "accent", icon: Play, color: "text-accent-500" },
+  completed: { label: "مكتملة", variant: "success", icon: CheckCircle2, color: "text-green-500" },
+  confirmed: { label: "مؤكدة", variant: "success", icon: UserCheck, color: "text-green-600" },
+  reviewed: { label: "تم التقييم", variant: "success", icon: Star, color: "text-green-600" },
+  cancelled: { label: "ملغاة", variant: "error", icon: XCircle, color: "text-red-500" },
+  disputed: { label: "نزاع", variant: "warning", icon: AlertTriangle, color: "text-orange-500" },
 };
 
-const statusHistoryLabels: Record<string, string> = {
-  requested: "تم إنشاء الطلب",
-  quoted: "تم تقديم عرض سعر",
+const statusTimelineLabels: Record<string, string> = {
+  requested: "تم إرسال الطلب",
+  quoted: "تم التسعير",
   accepted: "تم قبول المهمة",
-  in_progress: "بدأ التنفيذ",
-  completed: "أعلن الحرفي اكتمال العمل",
-  confirmed: "أكّد العميل اكتمال العمل",
+  in_progress: "بدء التنفيذ",
+  completed: "تم الإكمال",
+  confirmed: "تأكيد الاكتمال",
   reviewed: "تم التقييم",
   cancelled: "تم الإلغاء",
   disputed: "تم رفع نزاع",
@@ -116,285 +65,302 @@ export default function JobDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const job = useQuery(api.jobs.getDetail, {
-    jobId: id as Id<"jobs">,
-  });
-  const updateStatus = useMutation(api.jobs.updateStatus);
+  const isValidId = /^[a-z0-9]{32}$/.test(id) || id.startsWith("k");
+  const job = useQuery(api.jobs.getDetail, isValidId ? { id: id as Id<"jobs"> } : "skip");
+  const transitionStatus = useMutation(api.jobs.transitionStatus);
+  const respondToDirectHire = useMutation(api.jobs.respondToDirectHire);
 
-  const [confirmAction, setConfirmAction] = useState<{
-    status: string;
-    title: string;
-    message: string;
-  } | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (job === undefined) {
+  const handleTransition = useCallback(
+    async (newStatus: string) => {
+      setIsSubmitting(true);
+      try {
+        await transitionStatus({
+          jobId: id as Id<"jobs">,
+          newStatus: newStatus as any,
+        });
+        setConfirmAction(null);
+      } catch (err: any) {
+        alert(err.message || "حدث خطأ");
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [transitionStatus, id]
+  );
+
+  const handleDirectHireResponse = useCallback(
+    async (accept: boolean) => {
+      setIsSubmitting(true);
+      try {
+        await respondToDirectHire({
+          jobId: id as Id<"jobs">,
+          accept,
+        });
+        setConfirmAction(null);
+      } catch (err: any) {
+        alert(err.message || "حدث خطأ");
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [respondToDirectHire, id]
+  );
+
+  if (job === undefined && isValidId) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex justify-center py-16">
         <Spinner size="lg" />
       </div>
     );
   }
 
-  if (job === null) {
+  if (!job) {
     return (
-      <div className="max-w-3xl mx-auto">
-        <Card>
-          <CardContent>
-            <div className="text-center py-8">
-              <AlertTriangle className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
-              <h2 className="text-lg font-semibold text-foreground mb-2">
-                المهمة غير موجودة
-              </h2>
-              <p className="text-neutral-500 mb-4">
-                عذراً، لم نتمكن من العثور على هذه المهمة أو ليس لديك صلاحية
-                الوصول إليها.
-              </p>
-              <Link href="/dashboard/jobs">
-                <Button variant="secondary">العودة للمهام</Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="text-center py-16">
+        <h2 className="text-xl font-bold text-foreground mb-2">
+          المهمة غير موجودة
+        </h2>
+        <p className="text-neutral-500 mb-6">
+          عذراً، لم نتمكن من العثور على هذه المهمة.
+        </p>
+        <Link href="/dashboard/jobs">
+          <Button variant="primary">العودة للمهام</Button>
+        </Link>
       </div>
     );
   }
 
   const config = statusConfig[job.status] ?? statusConfig.requested;
   const StatusIcon = config.icon;
-  const isCustomer = job.userRole === "customer";
 
-  // Determine available actions based on current status and user role
-  const actions = getAvailableActions(job.status, job.userRole);
+  // Determine available actions
+  const actions: Array<{
+    key: string;
+    label: string;
+    icon: typeof Play;
+    variant: "primary" | "secondary" | "accent" | "danger";
+    confirmTitle: string;
+    confirmMessage: string;
+  }> = [];
 
-  async function handleAction(newStatus: string) {
-    setLoading(true);
-    try {
-      await updateStatus({
-        jobId: id as Id<"jobs">,
-        newStatus: newStatus as any,
-      });
-      setConfirmAction(null);
-    } catch (err: any) {
-      alert(err.message || "حدث خطأ");
-    } finally {
-      setLoading(false);
-    }
+  // Direct hire: provider accepts/rejects
+  if (job.isDirectHire && job.status === "requested" && job.isProvider) {
+    actions.push({
+      key: "accept_direct",
+      label: "قبول الطلب",
+      icon: CheckCircle2,
+      variant: "primary",
+      confirmTitle: "قبول طلب التوظيف المباشر",
+      confirmMessage: "هل أنت متأكد من قبول هذا الطلب؟ سيتم إنشاء مهمة جديدة معك.",
+    });
+    actions.push({
+      key: "reject_direct",
+      label: "رفض الطلب",
+      icon: XCircle,
+      variant: "danger",
+      confirmTitle: "رفض طلب التوظيف المباشر",
+      confirmMessage: "هل أنت متأكد من رفض هذا الطلب؟",
+    });
   }
+
+  // Standard transitions
+  if (job.status === "accepted") {
+    actions.push({
+      key: "in_progress",
+      label: "بدء التنفيذ",
+      icon: Play,
+      variant: "primary",
+      confirmTitle: "بدء التنفيذ",
+      confirmMessage: "هل أنت متأكد من بدء تنفيذ هذه المهمة؟",
+    });
+  }
+
+  if (job.status === "in_progress" && job.isProvider) {
+    actions.push({
+      key: "completed",
+      label: "تحديد كمكتملة",
+      icon: CheckCircle2,
+      variant: "primary",
+      confirmTitle: "تحديد المهمة كمكتملة",
+      confirmMessage: "هل أنت متأكد أن المهمة مكتملة؟ سيُطلب من العميل التأكيد.",
+    });
+  }
+
+  if (job.status === "completed" && job.isCustomer) {
+    actions.push({
+      key: "confirmed",
+      label: "تأكيد الاكتمال",
+      icon: UserCheck,
+      variant: "primary",
+      confirmTitle: "تأكيد اكتمال المهمة",
+      confirmMessage: "هل أنت متأكد أن المهمة تمت بنجاح؟",
+    });
+  }
+
+  // Cancel (before in_progress)
+  if (["requested", "quoted", "accepted"].includes(job.status)) {
+    actions.push({
+      key: "cancelled",
+      label: "إلغاء المهمة",
+      icon: Ban,
+      variant: "danger",
+      confirmTitle: "إلغاء المهمة",
+      confirmMessage: "هل أنت متأكد من إلغاء هذه المهمة؟ لا يمكن التراجع عن هذا الإجراء.",
+    });
+  }
+
+  // Dispute (from in_progress or completed)
+  if (["in_progress", "completed"].includes(job.status)) {
+    actions.push({
+      key: "disputed",
+      label: "رفع نزاع",
+      icon: Flag,
+      variant: "danger",
+      confirmTitle: "رفع نزاع",
+      confirmMessage: "هل أنت متأكد من رفع نزاع على هذه المهمة؟ سيتم مراجعة القضية من قبل فريق الدعم.",
+    });
+  }
+
+  const currentConfirmAction = actions.find((a) => a.key === confirmAction);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-neutral-500">
-        <Link
-          href="/dashboard/jobs"
-          className="hover:text-foreground transition-colors"
-        >
-          المهام
-        </Link>
-        <ChevronRight className="h-4 w-4" />
-        <span className="text-foreground truncate">{job.title}</span>
-      </div>
-
-      {/* Status Banner */}
-      <div
-        className={cn(
-          "flex items-center gap-3 px-5 py-4 rounded-xl border",
-          config.bgColor
-        )}
+      {/* Back */}
+      <Link
+        href="/dashboard/jobs"
+        className="inline-flex items-center gap-2 text-sm text-neutral-500 hover:text-foreground transition-colors"
       >
-        <StatusIcon className={cn("h-6 w-6", config.color)} />
+        <ArrowRight className="h-4 w-4" />
+        العودة للمهام
+      </Link>
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
         <div>
-          <p className={cn("font-semibold text-lg", config.color)}>
-            {config.label}
-          </p>
-          <p className="text-sm text-neutral-500">
-            {getStatusDescription(job.status, job.userRole)}
-          </p>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-2xl font-bold text-foreground">{job.title}</h1>
+            <Badge variant={config.variant} className="text-sm">
+              <StatusIcon className="h-3.5 w-3.5" />
+              {config.label}
+            </Badge>
+          </div>
+          <p className="text-neutral-500">{job.description}</p>
         </div>
+
+        {job.isDirectHire && (
+          <Badge variant="accent">توظيف مباشر</Badge>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Job Info */}
+          {/* Parties */}
           <Card>
             <CardContent>
-              <h2 className="text-xl font-bold text-foreground mb-3">
-                {job.title}
+              <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <User className="h-5 w-5 text-primary-500" />
+                الأطراف
               </h2>
-              <p className="text-neutral-600 leading-relaxed mb-4">
-                {job.description}
-              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Customer */}
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-neutral-50">
+                  <Avatar
+                    src={job.customerAvatar}
+                    alt={job.customerName}
+                    size="md"
+                  />
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-0.5">العميل</p>
+                    <p className="font-medium text-foreground">
+                      {job.customerName}
+                    </p>
+                  </div>
+                  {job.isCustomer && (
+                    <Badge variant="primary" className="mr-auto text-[10px]">
+                      أنت
+                    </Badge>
+                  )}
+                </div>
 
-              <div className="flex flex-wrap items-center gap-4 text-sm">
-                <span className="flex items-center gap-1.5 text-neutral-600">
-                  <Banknote className="h-4 w-4 text-primary-500" />
-                  <span className="font-semibold">{job.price} د.أ</span>
-                </span>
-                {job.request?.city && (
-                  <span className="flex items-center gap-1.5 text-neutral-600">
-                    <MapPin className="h-4 w-4 text-primary-500" />
-                    {cityLabels[job.request.city] ?? job.request.city}
-                  </span>
-                )}
-                {job.isDirectHire && (
-                  <Badge variant="default">توظيف مباشر</Badge>
-                )}
-                {job.quote && (
-                  <span className="flex items-center gap-1.5 text-neutral-600">
-                    <Clock className="h-4 w-4 text-primary-500" />
-                    {job.quote.estimatedDuration}
-                  </span>
-                )}
+                {/* Provider */}
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-neutral-50">
+                  <Avatar
+                    src={job.providerAvatar}
+                    alt={job.providerName}
+                    size="md"
+                  />
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-0.5">الحرفي</p>
+                    <p className="font-medium text-foreground">
+                      {job.providerName}
+                    </p>
+                  </div>
+                  {job.isProvider && (
+                    <Badge variant="primary" className="mr-auto text-[10px]">
+                      أنت
+                    </Badge>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Quote details (if from a request) */}
-          {job.quote && (
-            <Card>
-              <CardContent>
-                <h3 className="font-semibold text-foreground mb-3">
-                  تفاصيل العرض
-                </h3>
-                <div className="bg-neutral-50 rounded-xl p-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-neutral-500">السعر</span>
-                    <span className="font-semibold text-foreground">
-                      {job.quote.price} د.أ
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-neutral-500">المدة المتوقعة</span>
-                    <span className="font-semibold text-foreground">
-                      {job.quote.estimatedDuration}
-                    </span>
-                  </div>
-                  {job.quote.message && (
-                    <div className="pt-2 border-t border-neutral-200">
-                      <p className="text-sm text-neutral-600">
-                        {job.quote.message}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Action Buttons */}
-          {actions.length > 0 && (
-            <Card>
-              <CardContent>
-                <h3 className="font-semibold text-foreground mb-4">
-                  الإجراءات المتاحة
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  {actions.map((action) => (
-                    <Button
-                      key={action.status}
-                      variant={action.variant}
-                      onClick={() =>
-                        setConfirmAction({
-                          status: action.status,
-                          title: action.confirmTitle,
-                          message: action.confirmMessage,
-                        })
-                      }
-                    >
-                      <action.icon className="h-4 w-4" />
-                      {action.label}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Review (if exists) */}
-          {job.review && (
-            <Card>
-              <CardContent>
-                <h3 className="font-semibold text-foreground mb-3">التقييم</h3>
-                <div className="flex items-center gap-2 mb-2">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={cn(
-                        "h-5 w-5",
-                        i < job.review!.rating
-                          ? "text-accent-500 fill-accent-500"
-                          : "text-neutral-300"
-                      )}
-                    />
-                  ))}
-                </div>
-                <p className="text-neutral-600">{job.review.comment}</p>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Timeline */}
           <Card>
             <CardContent>
-              <h3 className="font-semibold text-foreground mb-4">
-                سجل الحالات
-              </h3>
+              <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary-500" />
+                سجل الحالة
+              </h2>
               <div className="relative">
-                {job.statusHistory.map((entry, index) => {
-                  const isLast = index === job.statusHistory.length - 1;
-                  const entryConfig =
-                    statusConfig[entry.status] ?? statusConfig.requested;
+                {job.statusHistory.map((entry, i) => {
+                  const entryConfig = statusConfig[entry.status] ?? statusConfig.requested;
                   const EntryIcon = entryConfig.icon;
+                  const isLast = i === job.statusHistory.length - 1;
 
                   return (
-                    <div key={index} className="flex gap-4 pb-6 last:pb-0">
-                      {/* Line + dot */}
-                      <div className="flex flex-col items-center">
-                        <div
-                          className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center border-2 shrink-0",
-                            isLast
-                              ? "border-primary-500 bg-primary-50"
-                              : "border-neutral-300 bg-neutral-50"
-                          )}
-                        >
-                          <EntryIcon
-                            className={cn(
-                              "h-4 w-4",
-                              isLast
-                                ? "text-primary-600"
-                                : "text-neutral-400"
-                            )}
-                          />
-                        </div>
-                        {!isLast && (
-                          <div className="w-0.5 flex-1 bg-neutral-200 mt-1" />
-                        )}
+                    <div key={i} className="flex gap-4 relative">
+                      {/* Line */}
+                      {!isLast && (
+                        <div className="absolute right-[17px] top-10 bottom-0 w-px bg-neutral-200" />
+                      )}
+
+                      {/* Dot */}
+                      <div
+                        className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center ${
+                          isLast
+                            ? "bg-primary-50 ring-2 ring-primary-200"
+                            : "bg-neutral-100"
+                        }`}
+                      >
+                        <EntryIcon
+                          className={`h-4 w-4 ${
+                            isLast ? entryConfig.color : "text-neutral-400"
+                          }`}
+                        />
                       </div>
 
                       {/* Content */}
-                      <div className="pt-1 pb-2">
+                      <div className={`pb-6 ${isLast ? "" : ""}`}>
                         <p
-                          className={cn(
-                            "text-sm font-medium",
+                          className={`font-medium text-sm ${
                             isLast ? "text-foreground" : "text-neutral-600"
-                          )}
+                          }`}
                         >
-                          {statusHistoryLabels[entry.status] ?? entry.status}
+                          {statusTimelineLabels[entry.status] ?? entry.status}
                         </p>
                         <p className="text-xs text-neutral-400 mt-0.5">
-                          {new Date(entry.timestamp).toLocaleDateString(
-                            "ar-JO",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
+                          {new Date(entry.timestamp).toLocaleDateString("ar-JO", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </p>
                       </div>
                     </div>
@@ -403,104 +369,109 @@ export default function JobDetailPage({
               </div>
             </CardContent>
           </Card>
+
+          {/* Actions */}
+          {actions.length > 0 && (
+            <Card>
+              <CardContent>
+                <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-primary-500" />
+                  الإجراءات المتاحة
+                </h2>
+                <div className="flex flex-wrap gap-3">
+                  {actions.map((action) => {
+                    const ActionIcon = action.icon;
+                    return (
+                      <Button
+                        key={action.key}
+                        variant={action.variant}
+                        onClick={() => setConfirmAction(action.key)}
+                      >
+                        <ActionIcon className="h-4 w-4" />
+                        {action.label}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Customer Info */}
+          {/* Job Info */}
           <Card>
             <CardContent>
-              <h3 className="text-sm font-medium text-neutral-500 mb-3">
-                العميل
-              </h3>
-              <div className="flex items-center gap-3">
-                <Avatar
-                  src={job.customer.avatarUrl}
-                  alt={job.customer.name}
-                  size="md"
-                />
-                <div>
-                  <p className="font-semibold text-foreground">
-                    {job.customer.name}
-                  </p>
-                  {isCustomer && (
-                    <Badge variant="primary" className="mt-0.5">
-                      أنت
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Provider Info */}
-          <Card>
-            <CardContent>
-              <h3 className="text-sm font-medium text-neutral-500 mb-3">
-                الحرفي
-              </h3>
-              <div className="flex items-center gap-3">
-                <Avatar
-                  src={job.provider.avatarUrl}
-                  alt={job.provider.name}
-                  size="md"
-                />
-                <div>
-                  <p className="font-semibold text-foreground">
-                    {job.provider.name}
-                  </p>
-                  {!isCustomer && (
-                    <Badge variant="primary" className="mt-0.5">
-                      أنت
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              {job.provider.bio && (
-                <p className="text-sm text-neutral-500 mt-3 line-clamp-3">
-                  {job.provider.bio}
-                </p>
-              )}
-              <Link href={`/providers/${job.provider._id}`}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-3 w-full"
-                >
-                  <User className="h-4 w-4" />
-                  عرض الملف الشخصي
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Job Summary */}
-          <Card>
-            <CardContent>
-              <h3 className="text-sm font-medium text-neutral-500 mb-3">
-                ملخص المهمة
-              </h3>
+              <h3 className="font-semibold text-foreground mb-4">تفاصيل المهمة</h3>
               <dl className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-neutral-500">السعر</dt>
-                  <dd className="font-semibold text-foreground">
-                    {job.price} د.أ
-                  </dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-neutral-500">نوع المهمة</dt>
+                {job.price > 0 && (
+                  <div className="flex items-center justify-between">
+                    <dt className="text-neutral-500 flex items-center gap-1.5">
+                      <Banknote className="h-4 w-4" />
+                      السعر
+                    </dt>
+                    <dd className="font-semibold text-primary-600">
+                      {job.price} د.أ
+                    </dd>
+                  </div>
+                )}
+
+                {job.categoryNameAr && (
+                  <div className="flex items-center justify-between">
+                    <dt className="text-neutral-500 flex items-center gap-1.5">
+                      <Briefcase className="h-4 w-4" />
+                      التصنيف
+                    </dt>
+                    <dd className="font-medium text-foreground">
+                      {job.categoryNameAr}
+                    </dd>
+                  </div>
+                )}
+
+                {job.requestCity && (
+                  <div className="flex items-center justify-between">
+                    <dt className="text-neutral-500 flex items-center gap-1.5">
+                      <MapPin className="h-4 w-4" />
+                      المدينة
+                    </dt>
+                    <dd className="font-medium text-foreground">
+                      {cityLabels[job.requestCity] ?? job.requestCity}
+                    </dd>
+                  </div>
+                )}
+
+                {job.quotedDuration && (
+                  <div className="flex items-center justify-between">
+                    <dt className="text-neutral-500 flex items-center gap-1.5">
+                      <Clock className="h-4 w-4" />
+                      المدة المقدرة
+                    </dt>
+                    <dd className="font-medium text-foreground">
+                      {job.quotedDuration}
+                    </dd>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <dt className="text-neutral-500 flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4" />
+                    تاريخ الإنشاء
+                  </dt>
                   <dd className="font-medium text-foreground">
-                    {job.isDirectHire ? "توظيف مباشر" : "عبر طلب"}
+                    {new Date(job._creationTime).toLocaleDateString("ar-JO", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </dd>
                 </div>
-                <div className="flex justify-between">
-                  <dt className="text-neutral-500">تاريخ الإنشاء</dt>
-                  <dd className="font-medium text-foreground">
-                    {new Date(job._creationTime).toLocaleDateString("ar-JO")}
-                  </dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-neutral-500">الرسائل</dt>
+
+                <div className="flex items-center justify-between">
+                  <dt className="text-neutral-500 flex items-center gap-1.5">
+                    <MessageSquare className="h-4 w-4" />
+                    الرسائل
+                  </dt>
                   <dd className="font-medium text-foreground">
                     {job.messageCount}
                   </dd>
@@ -509,11 +480,26 @@ export default function JobDetailPage({
             </CardContent>
           </Card>
 
-          {/* Original Request Link */}
-          {job.request && (
-            <Link href={`/dashboard/requests/${job.request._id}`}>
-              <Button variant="ghost" className="w-full">
-                <ArrowDown className="h-4 w-4 rotate-90" />
+          {/* Quote Details */}
+          {job.quoteMessage && (
+            <Card>
+              <CardContent>
+                <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary-500" />
+                  رسالة العرض
+                </h3>
+                <p className="text-sm text-neutral-600 leading-relaxed">
+                  {job.quoteMessage}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Related Request */}
+          {job.requestId && (
+            <Link href={`/dashboard/requests/${job.requestId}`}>
+              <Button variant="secondary" className="w-full">
+                <FileText className="h-4 w-4" />
                 عرض الطلب الأصلي
               </Button>
             </Link>
@@ -525,169 +511,36 @@ export default function JobDetailPage({
       <Modal
         isOpen={!!confirmAction}
         onClose={() => setConfirmAction(null)}
-        title={confirmAction?.title ?? ""}
+        title={currentConfirmAction?.confirmTitle ?? "تأكيد"}
       >
-        <p className="text-neutral-600 mb-6">{confirmAction?.message}</p>
+        <p className="text-neutral-600 mb-6">
+          {currentConfirmAction?.confirmMessage}
+        </p>
         <div className="flex gap-3 justify-end">
-          <Button variant="ghost" onClick={() => setConfirmAction(null)}>
+          <Button
+            variant="secondary"
+            onClick={() => setConfirmAction(null)}
+            disabled={isSubmitting}
+          >
             إلغاء
           </Button>
           <Button
-            variant={
-              confirmAction?.status === "cancelled" ||
-              confirmAction?.status === "disputed"
-                ? "danger"
-                : "primary"
-            }
-            disabled={loading}
-            onClick={() =>
-              confirmAction && handleAction(confirmAction.status)
-            }
+            variant={currentConfirmAction?.variant ?? "primary"}
+            isLoading={isSubmitting}
+            onClick={() => {
+              if (confirmAction === "accept_direct") {
+                handleDirectHireResponse(true);
+              } else if (confirmAction === "reject_direct") {
+                handleDirectHireResponse(false);
+              } else if (confirmAction) {
+                handleTransition(confirmAction);
+              }
+            }}
           >
-            {loading ? <Spinner size="sm" /> : "تأكيد"}
+            تأكيد
           </Button>
         </div>
       </Modal>
     </div>
   );
-}
-
-// ──────────────────────────────────────────────
-// Helper: determine available actions
-// ──────────────────────────────────────────────
-
-function getAvailableActions(
-  status: string,
-  userRole: "customer" | "provider"
-) {
-  const actions: Array<{
-    status: string;
-    label: string;
-    variant: "primary" | "secondary" | "danger";
-    icon: React.ElementType;
-    confirmTitle: string;
-    confirmMessage: string;
-  }> = [];
-
-  if (status === "requested" && userRole === "customer") {
-    actions.push({
-      status: "accepted",
-      label: "قبول الطلب",
-      variant: "primary",
-      icon: CheckCircle2,
-      confirmTitle: "قبول طلب التوظيف المباشر",
-      confirmMessage: "هل أنت متأكد من قبول هذا الطلب؟ سيتم بدء المهمة مع الحرفي.",
-    });
-  }
-
-  if (status === "accepted") {
-    actions.push({
-      status: "in_progress",
-      label: "بدء التنفيذ",
-      variant: "primary",
-      icon: Play,
-      confirmTitle: "بدء تنفيذ المهمة",
-      confirmMessage: "هل أنت متأكد من بدء تنفيذ المهمة؟",
-    });
-  }
-
-  if (status === "in_progress" && userRole === "provider") {
-    actions.push({
-      status: "completed",
-      label: "إعلان الاكتمال",
-      variant: "primary",
-      icon: CheckCircle2,
-      confirmTitle: "إعلان اكتمال المهمة",
-      confirmMessage:
-        "هل أنت متأكد أن العمل مكتمل؟ سيتم إخطار العميل للتأكيد.",
-    });
-  }
-
-  if (status === "completed" && userRole === "customer") {
-    actions.push({
-      status: "confirmed",
-      label: "تأكيد الاكتمال",
-      variant: "primary",
-      icon: CheckCircle2,
-      confirmTitle: "تأكيد اكتمال المهمة",
-      confirmMessage:
-        "هل أنت متأكد من اكتمال العمل بشكل مرضٍ؟ بعد التأكيد يمكنك تقييم الحرفي.",
-    });
-  }
-
-  // Cancel — only before in_progress
-  if (
-    ["requested", "quoted", "accepted"].includes(status)
-  ) {
-    actions.push({
-      status: "cancelled",
-      label: "إلغاء المهمة",
-      variant: "danger",
-      icon: XCircle,
-      confirmTitle: "إلغاء المهمة",
-      confirmMessage:
-        "هل أنت متأكد من إلغاء المهمة؟ لا يمكن التراجع عن هذا الإجراء.",
-    });
-  }
-
-  // Dispute — from in_progress or completed
-  if (["in_progress", "completed"].includes(status)) {
-    actions.push({
-      status: "disputed",
-      label: "رفع نزاع",
-      variant: "danger",
-      icon: AlertTriangle,
-      confirmTitle: "رفع نزاع",
-      confirmMessage:
-        "هل تريد رفع نزاع على هذه المهمة؟ سيتم مراجعة الحالة من قبل الإدارة.",
-    });
-  }
-
-  return actions;
-}
-
-// ──────────────────────────────────────────────
-// Helper: status description for the user
-// ──────────────────────────────────────────────
-
-function getStatusDescription(
-  status: string,
-  userRole: "customer" | "provider"
-): string {
-  const descriptions: Record<string, Record<string, string>> = {
-    requested: {
-      customer: "في انتظار قبول الحرفي لطلبك.",
-      provider: "لديك طلب توظيف مباشر جديد. يمكنك قبوله أو رفضه.",
-    },
-    accepted: {
-      customer: "تم قبول المهمة. يمكنك أنت أو الحرفي بدء التنفيذ.",
-      provider: "تم قبول المهمة. يمكنك بدء التنفيذ عندما تكون جاهزاً.",
-    },
-    in_progress: {
-      customer: "المهمة قيد التنفيذ. سيُعلمك الحرفي عند الانتهاء.",
-      provider: "أنت تعمل على المهمة حالياً. أعلن الاكتمال عند الانتهاء.",
-    },
-    completed: {
-      customer: "أعلن الحرفي اكتمال العمل. تحقق وأكّد الاكتمال.",
-      provider: "في انتظار تأكيد العميل لاكتمال العمل.",
-    },
-    confirmed: {
-      customer: "تم تأكيد اكتمال المهمة. يمكنك تقييم الحرفي الآن.",
-      provider: "أكّد العميل اكتمال المهمة بنجاح.",
-    },
-    reviewed: {
-      customer: "تم تقييم المهمة بنجاح.",
-      provider: "تم تقييم المهمة من قبل العميل.",
-    },
-    cancelled: {
-      customer: "تم إلغاء المهمة.",
-      provider: "تم إلغاء المهمة.",
-    },
-    disputed: {
-      customer: "هناك نزاع مفتوح على هذه المهمة.",
-      provider: "هناك نزاع مفتوح على هذه المهمة.",
-    },
-  };
-
-  return descriptions[status]?.[userRole] ?? "";
 }

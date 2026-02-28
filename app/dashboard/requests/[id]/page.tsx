@@ -61,9 +61,11 @@ export default function RequestDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const request = useQuery(api.requests.getDetailForCustomer, {
-    id: id as Id<"requests">,
-  });
+  const isValidId = /^[a-z0-9]{32}$/.test(id) || id.startsWith("k");
+  const request = useQuery(
+    api.requests.getDetailForCustomer,
+    isValidId ? { id: id as Id<"requests"> } : "skip"
+  );
   const submitQuote = useMutation(api.quotes.submit);
   const acceptQuote = useMutation(api.quotes.accept);
   const rejectQuote = useMutation(api.quotes.reject);
@@ -142,7 +144,7 @@ export default function RequestDetailPage({
     [withdrawQuote]
   );
 
-  if (request === undefined) {
+  if (request === undefined && isValidId) {
     return (
       <div className="flex items-center justify-center py-20">
         <Spinner size="lg" />
