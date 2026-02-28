@@ -13,7 +13,7 @@ Set up the Next.js project with App Router, TailwindCSS, Convex backend, Better-
 - [ ] 1.3 — Set up Convex backend and connect to the Next.js app
 - [ ] 1.4 — Define Convex schema for all tables: users, categories, services, requests, quotes, jobs, messages, reviews, premium_orders
 - [ ] 1.5 — Set up Better-Auth with Google OAuth (sign-in, sign-out, session management, httpOnly cookies)
-- [ ] 1.6 — Build root layout with RTL `<html dir="rtl" lang="ar">`, global styles, and responsive container
+- [ ] 1.6 — Build root layout with RTL `<html dir="rtl" lang="ar">`, global styles, and responsive container and use IBM_Plex_Sans_Arabic font.
 - [ ] 1.7 — Create shared UI components (Button, Input, Card, Modal, Avatar, Badge, Spinner)
 - [ ] 1.8 — Configure PWA basics: `manifest.json` with app name, icons, theme color
 - [ ] 1.9 — Set up Convex file storage for image uploads (avatar, portfolio, request photos)
