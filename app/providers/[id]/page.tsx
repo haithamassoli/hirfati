@@ -1,12 +1,15 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "@/components/ui/star-rating";
 import { Spinner } from "@/components/ui/spinner";
 import { cityLabels } from "@/lib/constants";
@@ -19,9 +22,11 @@ import {
   CheckCircle2,
   MessageSquare,
   Star,
+  Send,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { use, useState } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -31,10 +36,50 @@ export default function ProviderProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
   const provider = useQuery(api.providers.getById, {
     id: id as Id<"users">,
   });
+  const { data: session } = authClient.useSession();
+  const directHire = useMutation(api.jobs.directHire);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showHireModal, setShowHireModal] = useState(false);
+  const [hireForm, setHireForm] = useState({
+    title: "",
+    description: "",
+    price: "",
+  });
+  const [hireLoading, setHireLoading] = useState(false);
+
+  async function handleDirectHire() {
+    if (!hireForm.title || !hireForm.description || !hireForm.price) return;
+    setHireLoading(true);
+    try {
+      const jobId = await directHire({
+        providerId: id as Id<"users">,
+        title: hireForm.title,
+        description: hireForm.description,
+        price: Number(hireForm.price),
+      });
+      setShowHireModal(false);
+      router.push(`/dashboard/jobs/${jobId}`);
+    } catch (err: any) {
+      alert(err.message || "حدث خطأ");
+    } finally {
+      setHireLoading(false);
+    }
+  }
+
+  function handleHireClick() {
+    if (!session) {
+      authClient.signIn.social({
+        provider: "google",
+        callbackURL: `/providers/${id}`,
+      });
+      return;
+    }
+    setShowHireModal(true);
+  }
 
   if (provider === undefined) {
     return (
@@ -192,15 +237,10 @@ export default function ProviderProfilePage({
               <Button
                 variant="primary"
                 size="lg"
-                onClick={() =>
-                  authClient.signIn.social({
-                    provider: "google",
-                    callbackURL: `/dashboard`,
-                  })
-                }
+                onClick={handleHireClick}
               >
-                <MessageSquare className="h-5 w-5" />
-                تواصل مع الحرفي
+                <Send className="h-5 w-5" />
+                طلب خدمة مباشرة
               </Button>
             </div>
           </div>
@@ -416,14 +456,9 @@ export default function ProviderProfilePage({
                 variant="primary"
                 size="lg"
                 className="w-full"
-                onClick={() =>
-                  authClient.signIn.social({
-                    provider: "google",
-                    callbackURL: `/dashboard`,
-                  })
-                }
+                onClick={handleHireClick}
               >
-                <MessageSquare className="h-5 w-5" />
+                <Send className="h-5 w-5" />
                 طلب خدمة من هذا الحرفي
               </Button>
             </div>
@@ -453,6 +488,73 @@ export default function ProviderProfilePage({
           />
         </div>
       )}
+
+      {/* Direct Hire Modal */}
+      <Modal
+        isOpen={showHireModal}
+        onClose={() => setShowHireModal(false)}
+        title={`طلب خدمة من ${provider.name}`}
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+              عنوان الخدمة المطلوبة
+            </label>
+            <Input
+              placeholder="مثال: تصليح أنابيب المطبخ"
+              value={hireForm.title}
+              onChange={(e) =>
+                setHireForm((f) => ({ ...f, title: e.target.value }))
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+              وصف تفصيلي
+            </label>
+            <Textarea
+              placeholder="صف المشكلة أو الخدمة التي تحتاجها بالتفصيل..."
+              rows={4}
+              value={hireForm.description}
+              onChange={(e) =>
+                setHireForm((f) => ({ ...f, description: e.target.value }))
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+              الميزانية المقترحة (د.أ)
+            </label>
+            <Input
+              type="number"
+              placeholder="50"
+              min={1}
+              value={hireForm.price}
+              onChange={(e) =>
+                setHireForm((f) => ({ ...f, price: e.target.value }))
+              }
+            />
+          </div>
+          <div className="flex gap-3 justify-end pt-2">
+            <Button variant="ghost" onClick={() => setShowHireModal(false)}>
+              إلغاء
+            </Button>
+            <Button
+              variant="primary"
+              disabled={
+                hireLoading ||
+                !hireForm.title ||
+                !hireForm.description ||
+                !hireForm.price
+              }
+              onClick={handleDirectHire}
+            >
+              {hireLoading ? <Spinner size="sm" /> : <Send className="h-4 w-4" />}
+              إرسال الطلب
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <Footer />
     </div>

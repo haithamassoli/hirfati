@@ -20,6 +20,7 @@ import {
   X,
   FileText,
   Search,
+  ClipboardList,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
@@ -53,6 +54,12 @@ const sidebarLinks = [
     label: "تصفح الطلبات",
     icon: Search,
     roles: ["provider"] as const,
+  },
+  {
+    href: "/dashboard/jobs",
+    label: "المهام",
+    icon: ClipboardList,
+    roles: ["customer", "provider"] as const,
   },
 ];
 
