@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { DashboardStatsSkeleton } from "@/components/ui/skeleton";
+import { fadeInUp, staggerContainer } from "@/lib/animations";
+import * as m from "motion/react-client";
 import {
   Briefcase,
   User,
@@ -68,7 +70,11 @@ export default function DashboardPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Greeting */}
-      <div>
+      <m.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
         <h1 className="text-2xl font-bold text-foreground">
           مرحبا، {user.name}
         </h1>
@@ -77,83 +83,32 @@ export default function DashboardPage() {
             ? "إليك ملخص نشاطك كحرفي على المنصة"
             : "إليك ملخص نشاطك على المنصة"}
         </p>
-      </div>
+      </m.div>
 
       {/* ── Onboarding Prompts ── */}
       {isProvider && !summary.isProfileComplete && (
-        <Card className="border-accent-200 bg-gradient-to-l from-accent-50 to-amber-50 overflow-hidden relative">
-          <CardContent>
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-accent-100 flex items-center justify-center shrink-0">
-                <AlertCircle className="h-6 w-6 text-accent-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-foreground mb-1 text-base">
-                  أكمل ملفك الشخصي للبدء
-                </h3>
-                <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
-                  لتظهر في نتائج البحث وتبدأ في استقبال طلبات العمل، أكمل
-                  ملفك الشخصي: أضف نبذة عنك، تخصصاتك، ومناطق خدمتك.
-                </p>
-                <Link href="/dashboard/profile">
-                  <Button variant="accent" size="sm">
-                    إكمال الملف الشخصي
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {!isProvider && summary.totalRequestsCount === 0 && (
-        <Card className="border-primary-200 bg-gradient-to-l from-primary-50 to-teal-50">
-          <CardContent>
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center shrink-0">
-                <Sparkles className="h-6 w-6 text-primary-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-foreground mb-1 text-base">
-                  ابدأ بنشر أول طلب لك
-                </h3>
-                <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
-                  أنشر طلبك ليتقدم الحرفيون بعروضهم. اختر التصنيف والمدينة
-                  والميزانية وسنوصلك بأفضل المتخصصين.
-                </p>
-                <Link href="/dashboard/requests/new">
-                  <Button variant="primary" size="sm">
-                    نشر طلب جديد
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {isProvider &&
-        summary.isProfileComplete &&
-        summary.activeServicesCount === 0 && (
-          <Card className="border-blue-200 bg-gradient-to-l from-blue-50 to-sky-50">
+        <m.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <Card className="border-accent-200 bg-gradient-to-l from-accent-50 to-amber-50 overflow-hidden relative">
             <CardContent>
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
-                  <Briefcase className="h-6 w-6 text-blue-600" />
+                <div className="w-12 h-12 rounded-xl bg-accent-100 flex items-center justify-center shrink-0">
+                  <AlertCircle className="h-6 w-6 text-accent-600" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-foreground mb-1 text-base">
-                    أضف خدماتك لجذب العملاء
+                    أكمل ملفك الشخصي للبدء
                   </h3>
                   <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
-                    أضف الخدمات التي تقدمها مع الأسعار لتظهر للعملاء عند البحث
-                    عن تخصصك.
+                    لتظهر في نتائج البحث وتبدأ في استقبال طلبات العمل، أكمل
+                    ملفك الشخصي: أضف نبذة عنك، تخصصاتك، ومناطق خدمتك.
                   </p>
-                  <Link href="/dashboard/services">
-                    <Button variant="primary" size="sm">
-                      إضافة خدمة
+                  <Link href="/dashboard/profile">
+                    <Button variant="accent" size="sm">
+                      إكمال الملف الشخصي
                       <ArrowLeft className="h-4 w-4" />
                     </Button>
                   </Link>
@@ -161,6 +116,75 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+        </m.div>
+      )}
+
+      {!isProvider && summary.totalRequestsCount === 0 && (
+        <m.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <Card className="border-primary-200 bg-gradient-to-l from-primary-50 to-teal-50">
+            <CardContent>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary-100 flex items-center justify-center shrink-0">
+                  <Sparkles className="h-6 w-6 text-primary-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-foreground mb-1 text-base">
+                    ابدأ بنشر أول طلب لك
+                  </h3>
+                  <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
+                    أنشر طلبك ليتقدم الحرفيون بعروضهم. اختر التصنيف والمدينة
+                    والميزانية وسنوصلك بأفضل المتخصصين.
+                  </p>
+                  <Link href="/dashboard/requests/new">
+                    <Button variant="primary" size="sm">
+                      نشر طلب جديد
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </m.div>
+      )}
+
+      {isProvider &&
+        summary.isProfileComplete &&
+        summary.activeServicesCount === 0 && (
+          <m.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <Card className="border-blue-200 bg-gradient-to-l from-blue-50 to-sky-50">
+              <CardContent>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+                    <Briefcase className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-foreground mb-1 text-base">
+                      أضف خدماتك لجذب العملاء
+                    </h3>
+                    <p className="text-sm text-neutral-600 mb-3 leading-relaxed">
+                      أضف الخدمات التي تقدمها مع الأسعار لتظهر للعملاء عند البحث
+                      عن تخصصك.
+                    </p>
+                    <Link href="/dashboard/services">
+                      <Button variant="primary" size="sm">
+                        إضافة خدمة
+                        <ArrowLeft className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </m.div>
         )}
 
       {/* ── Summary Stats Grid ── */}
@@ -175,7 +199,12 @@ export default function DashboardPage() {
         <h2 className="text-base font-bold text-foreground mb-3">
           إجراءات سريعة
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <m.div
+          className="grid grid-cols-2 sm:grid-cols-3 gap-3"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
           {isProvider ? (
             <>
               <QuickAction
@@ -219,7 +248,7 @@ export default function DashboardPage() {
               />
             </>
           )}
-        </div>
+        </m.div>
       </div>
 
       {/* ── Recent Activity ── */}
@@ -236,53 +265,62 @@ export default function DashboardPage() {
               عرض الكل
             </Link>
           </div>
-          <div className="space-y-2">
+          <m.div
+            className="space-y-2"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
             {summary.recentActivity.map((activity) => (
-              <Link
-                key={activity._id}
-                href={`/dashboard/jobs/${activity._id}`}
-              >
-                <Card hover className="!p-4">
-                  <CardContent>
-                    <div className="flex items-center gap-3">
-                      <Avatar
-                        src={activity.otherPartyAvatar}
-                        alt={activity.otherPartyName}
-                        size="sm"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {activity.title}
-                        </p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs text-neutral-500">
-                            {activity.role === "customer" ? "مع" : "من"}{" "}
-                            {activity.otherPartyName}
-                          </span>
-                          <span className="text-neutral-300">·</span>
-                          <span className="text-xs text-neutral-400">
-                            {formatRelativeTime(activity.lastUpdate)}
-                          </span>
+              <m.div key={activity._id} variants={fadeInUp}>
+                <Link href={`/dashboard/jobs/${activity._id}`}>
+                  <Card hover className="!p-4">
+                    <CardContent>
+                      <div className="flex items-center gap-3">
+                        <Avatar
+                          src={activity.otherPartyAvatar}
+                          alt={activity.otherPartyName}
+                          size="sm"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {activity.title}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs text-neutral-500">
+                              {activity.role === "customer" ? "مع" : "من"}{" "}
+                              {activity.otherPartyName}
+                            </span>
+                            <span className="text-neutral-300">·</span>
+                            <span className="text-xs text-neutral-400">
+                              {formatRelativeTime(activity.lastUpdate)}
+                            </span>
+                          </div>
                         </div>
+                        <span
+                          className={`text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0 ${statusColors[activity.status] ?? "bg-neutral-100 text-neutral-600"}`}
+                        >
+                          {statusLabels[activity.status] ?? activity.status}
+                        </span>
                       </div>
-                      <span
-                        className={`text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0 ${statusColors[activity.status] ?? "bg-neutral-100 text-neutral-600"}`}
-                      >
-                        {statusLabels[activity.status] ?? activity.status}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </m.div>
             ))}
-          </div>
+          </m.div>
         </div>
       )}
 
       {/* Empty state when no activity at all */}
       {summary.recentActivity.length === 0 &&
         summary.totalJobsCount === 0 && (
-          <div className="text-center py-12">
+          <m.div
+            className="text-center py-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
             <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-4">
               <ClipboardList className="h-8 w-8 text-neutral-300" />
             </div>
@@ -294,7 +332,7 @@ export default function DashboardPage() {
                 ? "ابدأ بتصفح الطلبات المتاحة أو انتظر حتى يتواصل معك العملاء"
                 : "انشر أول طلب لك أو تصفح الحرفيين المتاحين"}
             </p>
-          </div>
+          </m.div>
         )}
     </div>
   );
@@ -308,7 +346,12 @@ function ProviderStats({
 }) {
   if (!summary) return null;
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <m.div
+      className="grid grid-cols-2 lg:grid-cols-4 gap-3"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+    >
       <StatCard
         icon={ClipboardList}
         iconBg="bg-primary-50"
@@ -381,7 +424,7 @@ function ProviderStats({
             : { text: "غير مكتمل", variant: "warning" as const }
         }
       />
-    </div>
+    </m.div>
   );
 }
 
@@ -393,7 +436,12 @@ function CustomerStats({
 }) {
   if (!summary) return null;
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <m.div
+      className="grid grid-cols-2 lg:grid-cols-4 gap-3"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+    >
       <StatCard
         icon={ClipboardList}
         iconBg="bg-primary-50"
@@ -452,7 +500,7 @@ function CustomerStats({
         label="إجمالي المهام"
         value={summary.totalJobsCount}
       />
-    </div>
+    </m.div>
   );
 }
 
@@ -477,38 +525,40 @@ function StatCard({
   badge?: { text: string; variant: "success" | "warning" };
 }) {
   return (
-    <Card className={highlight ? "ring-2 ring-primary-200 ring-offset-1" : ""}>
-      <CardContent>
-        <div className="flex items-start gap-3">
-          <div
-            className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center shrink-0`}
-          >
-            <Icon className={`h-5 w-5 ${iconColor}`} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[11px] text-neutral-500 leading-tight mb-0.5">
-              {label}
-            </p>
-            {badge ? (
-              <Badge variant={badge.variant} className="text-[10px]">
-                {badge.text}
-              </Badge>
-            ) : (
-              <>
-                <p className="text-xl font-bold text-foreground leading-tight">
-                  {value}
-                </p>
-                {subtitle && (
-                  <p className="text-[10px] text-neutral-400 mt-0.5">
-                    {subtitle}
+    <m.div variants={fadeInUp}>
+      <Card className={highlight ? "ring-2 ring-primary-200 ring-offset-1" : ""}>
+        <CardContent>
+          <div className="flex items-start gap-3">
+            <div
+              className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center shrink-0`}
+            >
+              <Icon className={`h-5 w-5 ${iconColor}`} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] text-neutral-500 leading-tight mb-0.5">
+                {label}
+              </p>
+              {badge ? (
+                <Badge variant={badge.variant} className="text-[10px]">
+                  {badge.text}
+                </Badge>
+              ) : (
+                <>
+                  <p className="text-xl font-bold text-foreground leading-tight">
+                    {value}
                   </p>
-                )}
-              </>
-            )}
+                  {subtitle && (
+                    <p className="text-[10px] text-neutral-400 mt-0.5">
+                      {subtitle}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </m.div>
   );
 }
 
@@ -525,22 +575,24 @@ function QuickAction({
   color: string;
 }) {
   return (
-    <Link href={href}>
-      <Card hover className="!p-4">
-        <CardContent>
-          <div className="flex flex-col items-center gap-2 text-center">
-            <div
-              className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center`}
-            >
-              <Icon className="h-5 w-5" />
+    <m.div variants={fadeInUp}>
+      <Link href={href}>
+        <Card hover className="!p-4">
+          <CardContent>
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div
+                className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center`}
+              >
+                <Icon className="h-5 w-5" />
+              </div>
+              <span className="text-xs font-medium text-foreground">
+                {label}
+              </span>
             </div>
-            <span className="text-xs font-medium text-foreground">
-              {label}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
+          </CardContent>
+        </Card>
+      </Link>
+    </m.div>
   );
 }
 

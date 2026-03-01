@@ -6,6 +6,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import type { Id } from "@/convex/_generated/dataModel";
+import * as m from "motion/react-client";
+import { AnimatePresence } from "motion/react";
 import {
   Send,
   ImagePlus,
@@ -160,79 +162,87 @@ export function JobChat({ jobId, isChatEligible }: JobChatProps) {
           </div>
         ) : (
           <>
-            {messages.map((msg, i) => {
-              const showAvatar =
-                i === 0 || messages[i - 1].senderId !== msg.senderId;
-              const showTime =
-                i === messages.length - 1 ||
-                messages[i + 1].senderId !== msg.senderId ||
-                messages[i + 1]._creationTime - msg._creationTime > 5 * 60 * 1000;
+            <AnimatePresence initial={false}>
+              {messages.map((msg, i) => {
+                const showAvatar =
+                  i === 0 || messages[i - 1].senderId !== msg.senderId;
+                const showTime =
+                  i === messages.length - 1 ||
+                  messages[i + 1].senderId !== msg.senderId ||
+                  messages[i + 1]._creationTime - msg._creationTime > 5 * 60 * 1000;
 
-              return (
-                <div key={msg._id} className={`flex ${msg.isMe ? "flex-row-reverse" : "flex-row"} items-end gap-2 ${showAvatar ? "mt-4" : "mt-0.5"}`}>
-                  {/* Avatar */}
-                  <div className="w-8 shrink-0">
-                    {showAvatar && (
-                      <Avatar
-                        src={msg.senderAvatar}
-                        alt={msg.senderName}
-                        size="sm"
-                      />
-                    )}
-                  </div>
-
-                  {/* Bubble */}
-                  <div className={`max-w-[75%] ${msg.isMe ? "items-end" : "items-start"} flex flex-col`}>
-                    {showAvatar && (
-                      <span className={`text-[11px] text-neutral-400 mb-1 ${msg.isMe ? "text-left" : "text-right"}`}>
-                        {msg.senderName}
-                      </span>
-                    )}
-
-                    <div
-                      className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed break-words ${
-                        msg.isMe
-                          ? "bg-primary-500 text-white rounded-bl-md"
-                          : "bg-neutral-100 text-foreground rounded-br-md"
-                      }`}
-                    >
-                      {/* Image */}
-                      {msg.imageUrl && (
-                        <button
-                          onClick={() => setPreviewImage(msg.imageUrl)}
-                          className="block mb-2 relative rounded-xl overflow-hidden group cursor-pointer"
-                        >
-                          <Image
-                            src={msg.imageUrl}
-                            alt="صورة"
-                            width={280}
-                            height={200}
-                            className="object-cover rounded-xl max-h-[200px] w-auto"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                            <Maximize2 className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </div>
-                        </button>
-                      )}
-
-                      {/* Text */}
-                      {msg.content && (
-                        <p className="whitespace-pre-line">{msg.content}</p>
+                return (
+                  <m.div
+                    key={msg._id}
+                    initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    className={`flex ${msg.isMe ? "flex-row-reverse" : "flex-row"} items-end gap-2 ${showAvatar ? "mt-4" : "mt-0.5"}`}
+                  >
+                    {/* Avatar */}
+                    <div className="w-8 shrink-0">
+                      {showAvatar && (
+                        <Avatar
+                          src={msg.senderAvatar}
+                          alt={msg.senderName}
+                          size="sm"
+                        />
                       )}
                     </div>
 
-                    {showTime && (
-                      <span className={`text-[10px] text-neutral-400 mt-1 ${msg.isMe ? "text-left" : "text-right"}`}>
-                        {new Date(msg._creationTime).toLocaleTimeString("ar-JO", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                    {/* Bubble */}
+                    <div className={`max-w-[75%] ${msg.isMe ? "items-end" : "items-start"} flex flex-col`}>
+                      {showAvatar && (
+                        <span className={`text-[11px] text-neutral-400 mb-1 ${msg.isMe ? "text-left" : "text-right"}`}>
+                          {msg.senderName}
+                        </span>
+                      )}
+
+                      <div
+                        className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed break-words ${
+                          msg.isMe
+                            ? "bg-primary-500 text-white rounded-bl-md"
+                            : "bg-neutral-100 text-foreground rounded-br-md"
+                        }`}
+                      >
+                        {/* Image */}
+                        {msg.imageUrl && (
+                          <button
+                            onClick={() => setPreviewImage(msg.imageUrl)}
+                            className="block mb-2 relative rounded-xl overflow-hidden group cursor-pointer"
+                          >
+                            <Image
+                              src={msg.imageUrl}
+                              alt="صورة"
+                              width={280}
+                              height={200}
+                              className="object-cover rounded-xl max-h-[200px] w-auto"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                              <Maximize2 className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          </button>
+                        )}
+
+                        {/* Text */}
+                        {msg.content && (
+                          <p className="whitespace-pre-line">{msg.content}</p>
+                        )}
+                      </div>
+
+                      {showTime && (
+                        <span className={`text-[10px] text-neutral-400 mt-1 ${msg.isMe ? "text-left" : "text-right"}`}>
+                          {new Date(msg._creationTime).toLocaleTimeString("ar-JO", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  </m.div>
+                );
+              })}
+            </AnimatePresence>
             <div ref={messagesEndRef} />
           </>
         )}
@@ -288,27 +298,40 @@ export function JobChat({ jobId, isChatEligible }: JobChatProps) {
       </div>
 
       {/* Image Preview Lightbox */}
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setPreviewImage(null)}
-        >
-          <button
+      <AnimatePresence>
+        {previewImage && (
+          <m.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
             onClick={() => setPreviewImage(null)}
-            className="absolute top-4 left-4 text-white p-2 rounded-full bg-black/40 hover:bg-black/60 transition-colors cursor-pointer"
-            aria-label="إغلاق"
           >
-            <X className="h-6 w-6" />
-          </button>
-          <Image
-            src={previewImage}
-            alt="صورة مكبرة"
-            width={900}
-            height={600}
-            className="max-w-full max-h-[85vh] object-contain rounded-xl"
-          />
-        </div>
-      )}
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-4 left-4 text-white p-2 rounded-full bg-black/40 hover:bg-black/60 transition-colors cursor-pointer"
+              aria-label="إغلاق"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <m.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Image
+                src={previewImage}
+                alt="صورة مكبرة"
+                width={900}
+                height={600}
+                className="max-w-full max-h-[85vh] object-contain rounded-xl"
+              />
+            </m.div>
+          </m.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

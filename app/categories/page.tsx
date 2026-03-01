@@ -7,6 +7,8 @@ import { Footer } from "@/components/layout/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { Spinner } from "@/components/ui/spinner";
+import { fadeInUp, staggerContainer } from "@/lib/animations";
+import * as m from "motion/react-client";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -46,67 +48,80 @@ export default function CategoriesPage() {
 
       {/* Header */}
       <section className="bg-gradient-to-bl from-primary-50 via-background to-accent-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <m.div
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <h1 className="text-4xl font-bold text-foreground mb-4">
             تصنيفات الخدمات
           </h1>
           <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
             تصفح جميع تصنيفات الخدمات المتاحة واعثر على الحرفي المناسب لاحتياجك
           </p>
-        </div>
+        </m.div>
       </section>
 
       {/* Categories Grid */}
       <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <m.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
             {mainCategories.map((cat) => {
               const subs = getSubcategories(cat._id);
               const color =
                 colorMap[cat.slug] ?? "bg-neutral-100 text-neutral-600";
 
               return (
-                <Card key={cat._id} className="group overflow-hidden">
-                  <CardContent className="p-0">
-                    <Link
-                      href={`/categories/${cat.slug}`}
-                      className="flex items-center gap-4 p-6 hover:bg-neutral-50 transition-colors"
-                    >
-                      <div
-                        className={`w-16 h-16 rounded-2xl ${color} flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105`}
+                <m.div key={cat._id} variants={fadeInUp}>
+                  <Card className="group overflow-hidden">
+                    <CardContent className="p-0">
+                      <Link
+                        href={`/categories/${cat.slug}`}
+                        className="flex items-center gap-4 p-6 hover:bg-neutral-50 transition-colors"
                       >
-                        <CategoryIcon icon={cat.icon} className="h-8 w-8" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h2 className="text-lg font-semibold text-foreground mb-1">
-                          {cat.nameAr}
-                        </h2>
-                        <p className="text-sm text-neutral-500">{cat.name}</p>
-                      </div>
-                      <ChevronLeft className="h-5 w-5 text-neutral-400 group-hover:text-primary-500 transition-colors shrink-0" />
-                    </Link>
-
-                    {/* Subcategories */}
-                    {subs.length > 0 && (
-                      <div className="border-t border-border px-6 py-4">
-                        <div className="flex flex-wrap gap-2">
-                          {subs.map((sub) => (
-                            <Link
-                              key={sub._id}
-                              href={`/categories/${sub.slug}`}
-                              className="text-xs px-3 py-1.5 rounded-full bg-neutral-100 text-neutral-600 hover:bg-primary-50 hover:text-primary-600 transition-colors"
-                            >
-                              {sub.nameAr}
-                            </Link>
-                          ))}
+                        <div
+                          className={`w-16 h-16 rounded-2xl ${color} flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105`}
+                        >
+                          <CategoryIcon icon={cat.icon} className="h-8 w-8" />
                         </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                        <div className="flex-1 min-w-0">
+                          <h2 className="text-lg font-semibold text-foreground mb-1">
+                            {cat.nameAr}
+                          </h2>
+                          <p className="text-sm text-neutral-500">{cat.name}</p>
+                        </div>
+                        <ChevronLeft className="h-5 w-5 text-neutral-400 group-hover:text-primary-500 transition-colors shrink-0" />
+                      </Link>
+
+                      {/* Subcategories */}
+                      {subs.length > 0 && (
+                        <div className="border-t border-border px-6 py-4">
+                          <div className="flex flex-wrap gap-2">
+                            {subs.map((sub) => (
+                              <Link
+                                key={sub._id}
+                                href={`/categories/${sub.slug}`}
+                                className="text-xs px-3 py-1.5 rounded-full bg-neutral-100 text-neutral-600 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                              >
+                                {sub.nameAr}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </m.div>
               );
             })}
-          </div>
+          </m.div>
         </div>
       </section>
 

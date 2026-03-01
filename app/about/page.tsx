@@ -1,5 +1,9 @@
+"use client";
+
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { fadeInUp, staggerContainer } from "@/lib/animations";
+import * as m from "motion/react-client";
 import {
   Shield,
   Users,
@@ -8,13 +12,6 @@ import {
   CheckCircle2,
   Zap,
 } from "lucide-react";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "عن حرفتي",
-  description:
-    "تعرّف على حرفتي — المنصة الأولى لربط الحرفيين المهرة بالعملاء في الأردن. رؤيتنا، رسالتنا، وقيمنا.",
-};
 
 const values = [
   {
@@ -63,24 +60,41 @@ export default function AboutPage() {
 
       {/* Hero */}
       <section className="bg-gradient-to-bl from-primary-50 via-background to-accent-50 py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+        <m.div
+          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+        >
+          <m.h1
+            variants={fadeInUp}
+            className="text-4xl md:text-5xl font-bold text-foreground mb-6"
+          >
             عن <span className="text-primary-500">حرفتي</span>
-          </h1>
-          <p className="text-lg md:text-xl text-neutral-600 leading-relaxed max-w-3xl mx-auto">
+          </m.h1>
+          <m.p
+            variants={fadeInUp}
+            className="text-lg md:text-xl text-neutral-600 leading-relaxed max-w-3xl mx-auto"
+          >
             حرفتي هي المنصة الأولى في الأردن التي تربط الحرفيين المهرة بالعملاء
             الباحثين عن خدمات حرفية عالية الجودة. نهدف لتسهيل الوصول لأفضل
             الحرفيين في سباكة، كهرباء، نجارة، حدادة، دهان، تكييف، بلاط وصيانة
             عامة.
-          </p>
-        </div>
+          </m.p>
+        </m.div>
       </section>
 
       {/* Mission & Vision */}
       <section className="py-20 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-12">
-            <div className="bg-primary-50 rounded-2xl p-8">
+          <m.div
+            className="grid md:grid-cols-2 gap-12"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
+            <m.div variants={fadeInUp} className="bg-primary-50 rounded-2xl p-8">
               <div className="w-12 h-12 rounded-xl bg-primary-500 flex items-center justify-center mb-4">
                 <Target className="h-6 w-6 text-white" />
               </div>
@@ -92,8 +106,8 @@ export default function AboutPage() {
                 مهنية قوية، مع توفير تجربة سهلة وآمنة للعملاء للحصول على خدمات
                 حرفية موثوقة بأسعار عادلة.
               </p>
-            </div>
-            <div className="bg-accent-50 rounded-2xl p-8">
+            </m.div>
+            <m.div variants={fadeInUp} className="bg-accent-50 rounded-2xl p-8">
               <div className="w-12 h-12 rounded-xl bg-accent-500 flex items-center justify-center mb-4">
                 <Zap className="h-6 w-6 text-white" />
               </div>
@@ -105,23 +119,36 @@ export default function AboutPage() {
                 والمنطقة، نساهم في رفع مستوى المهن الحرفية وتقدير الحرفيين
                 المهرة.
               </p>
-            </div>
-          </div>
+            </m.div>
+          </m.div>
         </div>
       </section>
 
       {/* Values */}
       <section className="py-20 bg-neutral-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <m.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
             <h2 className="text-3xl font-bold text-foreground mb-3">قيمنا</h2>
             <p className="text-neutral-500">المبادئ التي توجّه عملنا</p>
-          </div>
+          </m.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <m.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
             {values.map((value) => (
-              <div
+              <m.div
                 key={value.title}
+                variants={fadeInUp}
                 className="bg-surface rounded-2xl p-6 border border-border text-center"
               >
                 <div
@@ -135,35 +162,48 @@ export default function AboutPage() {
                 <p className="text-sm text-neutral-500 leading-relaxed">
                   {value.description}
                 </p>
-              </div>
+              </m.div>
             ))}
-          </div>
+          </m.div>
         </div>
       </section>
 
       {/* Features */}
       <section className="py-20 bg-background">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <m.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
             <h2 className="text-3xl font-bold text-foreground mb-3">
               لماذا حرفتي؟
             </h2>
             <p className="text-neutral-500">
               مميزات تجعل تجربتك سهلة وآمنة
             </p>
-          </div>
+          </m.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <m.div
+            className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
             {features.map((feature) => (
-              <div
+              <m.div
                 key={feature}
+                variants={fadeInUp}
                 className="flex items-center gap-3 p-4 bg-surface rounded-xl border border-border"
               >
                 <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
                 <span className="text-foreground">{feature}</span>
-              </div>
+              </m.div>
             ))}
-          </div>
+          </m.div>
         </div>
       </section>
 
