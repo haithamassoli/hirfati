@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { ConvexClientProvider } from "@/components/providers/convex-provider";
 import { WebsiteJsonLd } from "@/components/seo/json-ld";
+import { ServiceWorkerRegister } from "@/components/pwa/sw-register";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
 import "./globals.css";
 
 const ibmPlexArabic = IBM_Plex_Sans_Arabic({
@@ -70,7 +72,11 @@ export default function RootLayout({
       </head>
       <body className="antialiased min-h-screen bg-background text-foreground">
         <WebsiteJsonLd />
-        <ConvexClientProvider>{children}</ConvexClientProvider>
+        <ConvexClientProvider>
+          {children}
+          <InstallPrompt />
+        </ConvexClientProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

@@ -1,4 +1,5 @@
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
 // Valid job status transitions
@@ -96,6 +97,15 @@ export const transitionStatus = mutation({
           by: user._id,
         },
       ],
+    });
+
+    // Notify the other party about job status change
+    const recipientId = isCustomer ? job.providerId : job.customerId;
+    await ctx.scheduler.runAfter(0, internal.notifications.notifyJobStatusChange, {
+      recipientId,
+      jobTitle: job.title,
+      newStatus,
+      jobId: jobId,
     });
 
     return { success: true };
@@ -280,6 +290,14 @@ export const directHire = mutation({
         },
       ],
       isDirectHire: true,
+    });
+
+    // Notify provider about direct hire request
+    await ctx.scheduler.runAfter(0, internal.notifications.notifyJobStatusChange, {
+      recipientId: args.providerId,
+      jobTitle: args.title,
+      newStatus: "requested",
+      jobId: jobId,
     });
 
     return jobId;

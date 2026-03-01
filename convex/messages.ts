@@ -1,4 +1,5 @@
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
 // Helper to get the authenticated user
@@ -50,11 +51,23 @@ export const send = mutation({
     const trimmed = content.trim();
     if (!trimmed) throw new Error("الرسالة فارغة");
 
-    return await ctx.db.insert("messages", {
+    const messageId = await ctx.db.insert("messages", {
       jobId,
       senderId: user._id,
       content: trimmed,
     });
+
+    // Notify the other party
+    const recipientId =
+      job.customerId === user._id ? job.providerId : job.customerId;
+    await ctx.scheduler.runAfter(0, internal.notifications.notifyNewMessage, {
+      recipientId,
+      senderName: user.name,
+      jobId: jobId,
+      preview: trimmed.length > 50 ? trimmed.slice(0, 50) + "..." : trimmed,
+    });
+
+    return messageId;
   },
 });
 
@@ -78,12 +91,24 @@ export const sendImage = mutation({
       throw new Error("لا يمكن إرسال رسائل في هذه المرحلة");
     }
 
-    return await ctx.db.insert("messages", {
+    const messageId = await ctx.db.insert("messages", {
       jobId,
       senderId: user._id,
       content: caption?.trim() || "",
       imageStorageId,
     });
+
+    // Notify the other party
+    const recipientId =
+      job.customerId === user._id ? job.providerId : job.customerId;
+    await ctx.scheduler.runAfter(0, internal.notifications.notifyNewMessage, {
+      recipientId,
+      senderName: user.name,
+      jobId: jobId,
+      preview: caption?.trim() || "صورة",
+    });
+
+    return messageId;
   },
 });
 

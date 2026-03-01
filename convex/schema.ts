@@ -169,6 +169,15 @@ export default defineSchema({
     .index("by_providerId", ["providerId"])
     .index("by_reviewerId", ["reviewerId"]),
 
+  push_subscriptions: defineTable({
+    userId: v.id("users"),
+    endpoint: v.string(),
+    p256dh: v.string(),
+    auth: v.string(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_endpoint", ["endpoint"]),
+
   premium_orders: defineTable({
     providerId: v.id("users"),
     type: v.union(v.literal("ad"), v.literal("visibility_boost")),

@@ -191,14 +191,14 @@ Configure push notifications and finalize PWA.
 
 ### Tasks
 
-- [ ] 10.1 — Set up Web Push API: generate VAPID keys, implement subscription flow in the client
-- [ ] 10.2 — Write Convex mutation to store push subscription per user
-- [ ] 10.3 — Write Convex scheduled functions to send push notifications on events: new quote received, quote accepted/rejected, new chat message, job status change
-- [ ] 10.4 — Build notification permission prompt UI (ask user to allow notifications)
-- [ ] 10.5 — Implement service worker for offline shell caching and static asset caching
-- [ ] 10.6 — Test PWA installability on Android and iOS
-- [ ] 10.7 — Add "Install App" prompt/banner for mobile users
-- [ ] 10.8 — Handle notification click: deep-link to the relevant job/chat page
+- [x] 10.1 — Set up Web Push API: generate VAPID keys, implement subscription flow in the client
+- [x] 10.2 — Write Convex mutation to store push subscription per user
+- [x] 10.3 — Write Convex scheduled functions to send push notifications on events: new quote received, quote accepted/rejected, new chat message, job status change
+- [x] 10.4 — Build notification permission prompt UI (ask user to allow notifications)
+- [x] 10.5 — Implement service worker for offline shell caching and static asset caching
+- [x] 10.6 — Test PWA installability on Android and iOS
+- [x] 10.7 — Add "Install App" prompt/banner for mobile users
+- [x] 10.8 — Handle notification click: deep-link to the relevant job/chat page
 
 ---
 

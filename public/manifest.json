@@ -9,6 +9,9 @@
   "orientation": "portrait-primary",
   "dir": "rtl",
   "lang": "ar",
+  "categories": ["business", "lifestyle"],
+  "scope": "/",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -25,6 +28,19 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "لوحة التحكم",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "طلب جديد",
+      "url": "/dashboard/requests/new",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

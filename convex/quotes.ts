@@ -1,4 +1,5 @@
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
 // Submit a quote on a request (one per provider per request)
@@ -43,6 +44,14 @@ export const submit = mutation({
       estimatedDuration: args.estimatedDuration,
       message: args.message,
       status: "pending",
+    });
+
+    // Notify customer about new quote
+    await ctx.scheduler.runAfter(0, internal.notifications.notifyNewQuote, {
+      customerId: request.customerId,
+      providerName: user.name,
+      requestTitle: request.title,
+      requestId: args.requestId,
     });
 
     return quoteId;
@@ -142,6 +151,14 @@ export const accept = mutation({
       isDirectHire: false,
     });
 
+    // Notify provider about accepted quote
+    await ctx.scheduler.runAfter(0, internal.notifications.notifyQuoteResponse, {
+      providerId: quote.providerId,
+      accepted: true,
+      requestTitle: request.title,
+      jobId: jobId,
+    });
+
     return jobId;
   },
 });
@@ -172,6 +189,13 @@ export const reject = mutation({
       throw new Error("غير مصرح برفض هذا العرض");
 
     await ctx.db.patch(quoteId, { status: "rejected" });
+
+    // Notify provider about rejected quote
+    await ctx.scheduler.runAfter(0, internal.notifications.notifyQuoteResponse, {
+      providerId: quote.providerId,
+      accepted: false,
+      requestTitle: request.title,
+    });
 
     return { success: true };
   },
