@@ -31,6 +31,18 @@ export const list = query({
     // Only show providers with complete profiles
     providers = providers.filter((p) => p.isProfileComplete);
 
+    // Get all active premium orders for priority ranking
+    const now = Date.now();
+    const activePremiumOrders = await ctx.db
+      .query("premium_orders")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .collect();
+    const premiumProviderIds = new Set(
+      activePremiumOrders
+        .filter((o) => o.endDate > now)
+        .map((o) => o.providerId)
+    );
+
     // Fetch reviews for each provider to compute rating
     const providersWithRating = await Promise.all(
       providers.map(async (provider) => {
@@ -51,8 +63,12 @@ export const list = query({
           .collect();
         const activeServices = services.filter((s) => s.isActive);
 
+        const hasPremium =
+          provider.isPremium || premiumProviderIds.has(provider._id);
+
         return {
           ...provider,
+          isPremium: hasPremium,
           avgRating: Math.round(avgRating * 10) / 10,
           reviewCount: reviews.length,
           serviceCount: activeServices.length,
@@ -168,6 +184,18 @@ export const listFeatured = query({
 
     const complete = providers.filter((p) => p.isProfileComplete);
 
+    // Get active premium orders
+    const now = Date.now();
+    const activePremiumOrders = await ctx.db
+      .query("premium_orders")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .collect();
+    const premiumProviderIds = new Set(
+      activePremiumOrders
+        .filter((o) => o.endDate > now)
+        .map((o) => o.providerId)
+    );
+
     const withRating = await Promise.all(
       complete.map(async (provider) => {
         const reviews = await ctx.db
@@ -180,13 +208,20 @@ export const listFeatured = query({
             ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
             : 0;
 
+        const avatarUrl = provider.avatarStorageId
+          ? await ctx.storage.getUrl(provider.avatarStorageId)
+          : provider.avatarUrl;
+
+        const hasPremium =
+          provider.isPremium || premiumProviderIds.has(provider._id);
+
         return {
           _id: provider._id,
           name: provider.name,
-          avatarUrl: provider.avatarUrl,
+          avatarUrl: avatarUrl ?? undefined,
           bio: provider.bio,
           serviceArea: provider.serviceArea,
-          isPremium: provider.isPremium,
+          isPremium: hasPremium,
           avgRating: Math.round(avgRating * 10) / 10,
           reviewCount: reviews.length,
         };

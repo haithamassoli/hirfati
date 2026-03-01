@@ -172,14 +172,14 @@ Implement premium ad placements and priority visibility boosts.
 
 ### Tasks
 
-- [ ] 9.1 — Define premium_orders table schema: providerId, type (ad/visibility_boost), duration (7/30 days), startDate, endDate, status
-- [ ] 9.2 — Build premium purchase page (`/dashboard/premium`) with plan options and pricing
-- [ ] 9.3 — Write Convex mutation for creating a premium order (manual activation by admin for MVP)
-- [ ] 9.4 — Implement priority ranking: boosted providers appear first in category/search results
-- [ ] 9.5 — Add premium badge component displayed on provider cards and profile pages
-- [ ] 9.6 — Build premium ad banner/card components for category pages and homepage
-- [ ] 9.7 — Write Convex scheduled function to expire premium orders after their duration ends
-- [ ] 9.8 — Write Convex query to check active premium status for a provider
+- [x] 9.1 — Define premium_orders table schema: providerId, type (ad/visibility_boost), duration (7/30 days), startDate, endDate, status
+- [x] 9.2 — Build premium purchase page (`/dashboard/premium`) with plan options and pricing
+- [x] 9.3 — Write Convex mutation for creating a premium order (manual activation by admin for MVP)
+- [x] 9.4 — Implement priority ranking: boosted providers appear first in category/search results
+- [x] 9.5 — Add premium badge component displayed on provider cards and profile pages
+- [x] 9.6 — Build premium ad banner/card components for category pages and homepage
+- [x] 9.7 — Write Convex scheduled function to expire premium orders after their duration ends
+- [x] 9.8 — Write Convex query to check active premium status for a provider
 
 ---
 

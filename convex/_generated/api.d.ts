@@ -10,10 +10,12 @@
 
 import type * as auth from "../auth.js";
 import type * as categories from "../categories.js";
+import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as files from "../files.js";
 import type * as jobs from "../jobs.js";
 import type * as messages from "../messages.js";
+import type * as premium from "../premium.js";
 import type * as profile from "../profile.js";
 import type * as providers from "../providers.js";
 import type * as quotes from "../quotes.js";
@@ -31,10 +33,12 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   categories: typeof categories;
+  crons: typeof crons;
   dashboard: typeof dashboard;
   files: typeof files;
   jobs: typeof jobs;
   messages: typeof messages;
+  premium: typeof premium;
   profile: typeof profile;
   providers: typeof providers;
   quotes: typeof quotes;

@@ -23,6 +23,7 @@ import {
   ClipboardList,
   Star,
   ArrowLeftRight,
+  Crown,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
@@ -85,6 +86,13 @@ const sidebarLinks: SidebarLink[] = [
     icon: Star,
     roles: ["customer", "provider"],
     section: "main",
+  },
+  {
+    href: "/dashboard/premium",
+    label: "الباقات المميزة",
+    icon: Crown,
+    roles: ["provider"],
+    section: "provider",
   },
 ];
 

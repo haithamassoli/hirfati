@@ -11,6 +11,7 @@ import { CategoryIcon } from "@/components/ui/category-icon";
 import { StarRating } from "@/components/ui/star-rating";
 import { Spinner } from "@/components/ui/spinner";
 import { cityLabels } from "@/lib/constants";
+import { PremiumBanner } from "@/components/premium/premium-banner";
 import { MapPin, Crown, Briefcase, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -150,6 +151,17 @@ export default function CategoryDetailPage({
               </button>
             ))}
           </div>
+
+          {/* Premium Providers Banner */}
+          {category && (
+            <div className="mb-8">
+              <PremiumBanner
+                categoryId={category._id as Id<"categories">}
+                title={`حرفيون مميزون - ${category.nameAr}`}
+                limit={4}
+              />
+            </div>
+          )}
 
           {/* Providers Grid */}
           {providers === undefined ? (

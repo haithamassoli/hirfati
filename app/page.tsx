@@ -10,6 +10,7 @@ import { StarRating } from "@/components/ui/star-rating";
 import { authClient } from "@/lib/auth-client";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { PremiumBanner } from "@/components/premium/premium-banner";
 import {
   Search,
   ArrowLeft,
@@ -238,6 +239,13 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Premium Banner */}
+      <section className="py-12 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <PremiumBanner title="حرفيون مميزون يوصى بهم" limit={4} />
+        </div>
+      </section>
 
       {/* Stats */}
       <section className="py-16 bg-primary-500">
