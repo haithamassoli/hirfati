@@ -33,6 +33,72 @@ export const listByProvider = query({
   },
 });
 
+export const search = query({
+  args: {
+    term: v.string(),
+    categoryId: v.optional(v.id("categories")),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, { term, categoryId, limit }) => {
+    const maxResults = limit ?? 20;
+
+    const services = await ctx.db
+      .query("services")
+      .withSearchIndex("search_title", (q) => {
+        let sq = q.search("title", term).eq("isActive", true);
+        if (categoryId) {
+          sq = sq.eq("categoryId", categoryId);
+        }
+        return sq;
+      })
+      .take(maxResults);
+
+    // Enrich with provider info and category
+    const enriched = await Promise.all(
+      services.map(async (service) => {
+        const provider = await ctx.db.get(service.providerId);
+        if (!provider || !provider.isProfileComplete) return null;
+
+        const category = await ctx.db.get(service.categoryId);
+        const avatarUrl = provider.avatarStorageId
+          ? await ctx.storage.getUrl(provider.avatarStorageId)
+          : provider.avatarUrl;
+
+        const reviews = await ctx.db
+          .query("reviews")
+          .withIndex("by_providerId", (q) =>
+            q.eq("providerId", provider._id)
+          )
+          .collect();
+        const avgRating =
+          reviews.length > 0
+            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+            : 0;
+
+        return {
+          _id: service._id,
+          title: service.title,
+          description: service.description,
+          price: service.price,
+          priceType: service.priceType,
+          categoryId: service.categoryId,
+          providerId: provider._id,
+          providerName: provider.name,
+          providerAvatar: avatarUrl ?? undefined,
+          providerRating: Math.round(avgRating * 10) / 10,
+          providerReviewCount: reviews.length,
+          categoryNameAr: category?.nameAr ?? "",
+          categorySlug: category?.slug ?? "",
+        };
+      })
+    );
+
+    return enriched.filter(
+      (s): s is NonNullable<typeof s> => s !== null
+    );
+  },
+});
+
 export const create = mutation({
   args: {
     title: v.string(),

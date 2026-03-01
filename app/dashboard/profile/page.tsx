@@ -22,6 +22,7 @@ import {
 import Image from "next/image";
 import { useState, useEffect, useRef, useCallback, type FormEvent } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
+import { compressImage } from "@/lib/image-compress";
 
 type City = "amman" | "irbid" | "zarqa";
 
@@ -87,11 +88,16 @@ export default function ProfileEditPage() {
   const handleAvatarUpload = useCallback(async (file: File) => {
     setUploadingAvatar(true);
     try {
+      const compressed = await compressImage(file, {
+        maxWidth: 400,
+        maxHeight: 400,
+        quality: 0.8,
+      });
       const url = await generateUploadUrl();
       const result = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": file.type },
-        body: file,
+        headers: { "Content-Type": "image/webp" },
+        body: compressed,
       });
       const { storageId } = await result.json();
       await updateAvatar({ storageId });
@@ -105,11 +111,16 @@ export default function ProfileEditPage() {
   const handlePortfolioUpload = useCallback(async (file: File) => {
     setUploadingPortfolio(true);
     try {
+      const compressed = await compressImage(file, {
+        maxWidth: 1200,
+        maxHeight: 1200,
+        quality: 0.8,
+      });
       const url = await generateUploadUrl();
       const result = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": file.type },
-        body: file,
+        headers: { "Content-Type": "image/webp" },
+        body: compressed,
       });
       const { storageId } = await result.json();
       await addPortfolioImage({ storageId, caption: caption || undefined });

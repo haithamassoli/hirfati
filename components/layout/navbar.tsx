@@ -2,9 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
-import { Wrench, Menu, X } from "lucide-react";
+import { Wrench, Menu, X, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const navLinks = [
   { href: "/categories", label: "التصنيفات" },
@@ -15,6 +16,7 @@ const navLinks = [
 export function Navbar() {
   const { data: session } = authClient.useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <nav className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-border">
@@ -40,6 +42,15 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push("/search")}
+              className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-neutral-500 hover:text-foreground hover:bg-neutral-100 transition-colors cursor-pointer"
+              aria-label="بحث"
+            >
+              <Search className="h-4 w-4" />
+              <span className="text-xs">بحث...</span>
+            </button>
+
             {session ? (
               <Button
                 variant="primary"

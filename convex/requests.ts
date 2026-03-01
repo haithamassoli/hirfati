@@ -186,6 +186,58 @@ export const listForProvider = query({
   },
 });
 
+export const search = query({
+  args: {
+    term: v.string(),
+    city: v.optional(
+      v.union(v.literal("amman"), v.literal("irbid"), v.literal("zarqa"))
+    ),
+    categoryId: v.optional(v.id("categories")),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, { term, city, categoryId, limit }) => {
+    const maxResults = limit ?? 20;
+
+    const results = await ctx.db
+      .query("requests")
+      .withSearchIndex("search_title", (q) => {
+        let sq = q.search("title", term).eq("status", "open");
+        if (city) sq = sq.eq("city", city);
+        if (categoryId) sq = sq.eq("categoryId", categoryId);
+        return sq;
+      })
+      .take(maxResults);
+
+    const enriched = await Promise.all(
+      results.map(async (req) => {
+        const category = await ctx.db.get(req.categoryId);
+        const customer = await ctx.db.get(req.customerId);
+        const quotes = await ctx.db
+          .query("quotes")
+          .withIndex("by_requestId", (q) => q.eq("requestId", req._id))
+          .collect();
+
+        const photoUrls = req.photos
+          ? await Promise.all(
+              req.photos.map(async (id) => await ctx.storage.getUrl(id))
+            )
+          : [];
+
+        return {
+          ...req,
+          categoryNameAr: category?.nameAr ?? "",
+          categorySlug: category?.slug ?? "",
+          customerName: customer?.name ?? "مستخدم",
+          quoteCount: quotes.filter((q) => q.status === "pending").length,
+          photoUrls: photoUrls.filter(Boolean) as string[],
+        };
+      })
+    );
+
+    return enriched.sort((a, b) => b._creationTime - a._creationTime);
+  },
+});
+
 // Create a service request
 export const create = mutation({
   args: {

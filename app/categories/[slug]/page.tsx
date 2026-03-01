@@ -9,10 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { StarRating } from "@/components/ui/star-rating";
-import { Spinner } from "@/components/ui/spinner";
+import { ProviderCardSkeleton } from "@/components/ui/skeleton";
 import { cityLabels } from "@/lib/constants";
 import { PremiumBanner } from "@/components/premium/premium-banner";
-import { MapPin, Crown, Briefcase, ChevronLeft } from "lucide-react";
+import {
+  MapPin,
+  Crown,
+  Briefcase,
+  ChevronLeft,
+  SlidersHorizontal,
+  Star,
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { use, useState } from "react";
@@ -27,6 +34,10 @@ export default function CategoryDetailPage({
 }) {
   const { slug } = use(params);
   const [selectedCity, setSelectedCity] = useState<City | undefined>();
+  const [showFilters, setShowFilters] = useState(false);
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
+  const [minRating, setMinRating] = useState<number | undefined>();
 
   const category = useQuery(api.categories.getBySlug, { slug });
   const subcategories = useQuery(
@@ -44,8 +55,12 @@ export default function CategoryDetailPage({
     return (
       <div className="min-h-screen">
         <Navbar />
-        <div className="flex items-center justify-center py-32">
-          <Spinner size="lg" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <ProviderCardSkeleton key={i} />
+            ))}
+          </div>
         </div>
         <Footer />
       </div>
@@ -78,6 +93,15 @@ export default function CategoryDetailPage({
     { value: "irbid", label: "إربد" },
     { value: "zarqa", label: "الزرقاء" },
   ];
+
+  const filteredProviders = (providers ?? []).filter((p) => {
+    if (minRating && p.avgRating < minRating) return false;
+    const pMin = Number(minPrice);
+    const pMax = Number(maxPrice);
+    if (pMin > 0 && p.maxPrice < pMin) return false;
+    if (pMax > 0 && p.minPrice > pMax) return false;
+    return true;
+  });
 
   return (
     <div className="min-h-screen">
@@ -134,22 +158,113 @@ export default function CategoryDetailPage({
       {/* Filters + Providers */}
       <section className="py-12 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* City Filter */}
-          <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2">
-            <MapPin className="h-4 w-4 text-neutral-500 shrink-0" />
-            {cities.map((city) => (
+          {/* Filters */}
+          <div className="space-y-4 mb-8">
+            {/* City Filter + Toggle */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              <MapPin className="h-4 w-4 text-neutral-500 shrink-0" />
+              {cities.map((city) => (
+                <button
+                  key={city.label}
+                  onClick={() => setSelectedCity(city.value)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                    selectedCity === city.value
+                      ? "bg-primary-500 text-white"
+                      : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                  }`}
+                >
+                  {city.label}
+                </button>
+              ))}
               <button
-                key={city.label}
-                onClick={() => setSelectedCity(city.value)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer ${
-                  selectedCity === city.value
-                    ? "bg-primary-500 text-white"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer mr-auto ${
+                  showFilters || minRating || minPrice || maxPrice
+                    ? "bg-primary-100 text-primary-700 border border-primary-200"
                     : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                 }`}
               >
-                {city.label}
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                فلاتر إضافية
               </button>
-            ))}
+            </div>
+
+            {/* Advanced Filters Panel */}
+            {showFilters && (
+              <div className="bg-neutral-50 rounded-xl border border-border p-5 animate-in slide-in-from-top-2 duration-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Price Range */}
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-2 block">
+                      نطاق السعر (د.أ)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={0}
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value)}
+                        placeholder="الحد الأدنى"
+                        className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-sm text-foreground placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                      />
+                      <span className="text-neutral-400">—</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        placeholder="الحد الأعلى"
+                        className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-sm text-foreground placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Minimum Rating */}
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-2 block">
+                      الحد الأدنى للتقييم
+                    </label>
+                    <div className="flex gap-2">
+                      {[
+                        { value: undefined, label: "الكل" },
+                        { value: 4, label: "4+" },
+                        { value: 3, label: "3+" },
+                        { value: 2, label: "2+" },
+                      ].map((option) => (
+                        <button
+                          key={option.label}
+                          onClick={() => setMinRating(option.value)}
+                          className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                            minRating === option.value
+                              ? "bg-primary-500 text-white"
+                              : "bg-surface text-neutral-600 border border-border hover:bg-neutral-100"
+                          }`}
+                        >
+                          {option.value && (
+                            <Star className="h-3.5 w-3.5 fill-current" />
+                          )}
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Clear filters */}
+                {(minPrice || maxPrice || minRating) && (
+                  <button
+                    onClick={() => {
+                      setMinPrice("");
+                      setMaxPrice("");
+                      setMinRating(undefined);
+                    }}
+                    className="mt-4 text-sm text-primary-600 hover:text-primary-700 cursor-pointer"
+                  >
+                    مسح الفلاتر
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Premium Providers Banner */}
@@ -165,10 +280,12 @@ export default function CategoryDetailPage({
 
           {/* Providers Grid */}
           {providers === undefined ? (
-            <div className="flex items-center justify-center py-16">
-              <Spinner size="lg" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ProviderCardSkeleton key={i} />
+              ))}
             </div>
-          ) : providers.length === 0 ? (
+          ) : filteredProviders.length === 0 ? (
             <div className="text-center py-16">
               <div className="w-20 h-20 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-4">
                 <Briefcase className="h-10 w-10 text-neutral-400" />
@@ -184,7 +301,7 @@ export default function CategoryDetailPage({
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {providers.map((provider) => (
+              {filteredProviders.map((provider) => (
                 <Link
                   key={provider._id}
                   href={`/providers/${provider._id}`}

@@ -5,7 +5,7 @@ import { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
+import { JobCardSkeleton } from "@/components/ui/skeleton";
 import { Avatar } from "@/components/ui/avatar";
 import { cityLabels } from "@/lib/constants";
 import {
@@ -77,8 +77,10 @@ export default function JobsListingPage() {
 
       {/* Jobs List */}
       {jobs === undefined ? (
-        <div className="flex justify-center py-16">
-          <Spinner size="lg" />
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <JobCardSkeleton key={i} />
+          ))}
         </div>
       ) : jobs.length === 0 ? (
         <Card>

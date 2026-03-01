@@ -7,7 +7,7 @@ import { Footer } from "@/components/layout/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import { RequestCardSkeleton } from "@/components/ui/skeleton";
 import { cityLabels } from "@/lib/constants";
 import { authClient } from "@/lib/auth-client";
 import {
@@ -18,6 +18,7 @@ import {
   FileText,
   ChevronLeft,
   Filter,
+  SlidersHorizontal,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -31,11 +32,22 @@ export default function RequestsPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<
     Id<"categories"> | undefined
   >();
+  const [showBudgetFilter, setShowBudgetFilter] = useState(false);
+  const [budgetMin, setBudgetMin] = useState<string>("");
+  const [budgetMax, setBudgetMax] = useState<string>("");
 
   const categories = useQuery(api.categories.listMain);
   const requests = useQuery(api.requests.listOpen, {
     city: selectedCity,
     categoryId: selectedCategoryId,
+  });
+
+  const bMin = Number(budgetMin);
+  const bMax = Number(budgetMax);
+  const filteredRequests = (requests ?? []).filter((r) => {
+    if (bMin > 0 && r.budgetMax < bMin) return false;
+    if (bMax > 0 && r.budgetMin > bMax) return false;
+    return true;
   });
 
   const cities: { value: City | undefined; label: string }[] = [
@@ -111,16 +123,69 @@ export default function RequestsPage() {
                     {cat.nameAr}
                   </button>
                 ))}
+
+                <button
+                  onClick={() => setShowBudgetFilter(!showBudgetFilter)}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer mr-auto ${
+                    showBudgetFilter || budgetMin || budgetMax
+                      ? "bg-primary-100 text-primary-700 border border-primary-200"
+                      : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                  }`}
+                >
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  الميزانية
+                </button>
+              </div>
+            )}
+
+            {/* Budget Range Filter */}
+            {showBudgetFilter && (
+              <div className="bg-neutral-50 rounded-xl border border-border p-5">
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  نطاق الميزانية (د.أ)
+                </label>
+                <div className="flex items-center gap-2 max-w-sm">
+                  <input
+                    type="number"
+                    min={0}
+                    value={budgetMin}
+                    onChange={(e) => setBudgetMin(e.target.value)}
+                    placeholder="الحد الأدنى"
+                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-sm text-foreground placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                  />
+                  <span className="text-neutral-400">—</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={budgetMax}
+                    onChange={(e) => setBudgetMax(e.target.value)}
+                    placeholder="الحد الأعلى"
+                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-sm text-foreground placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                  />
+                </div>
+                {(budgetMin || budgetMax) && (
+                  <button
+                    onClick={() => {
+                      setBudgetMin("");
+                      setBudgetMax("");
+                    }}
+                    className="mt-3 text-sm text-primary-600 hover:text-primary-700 cursor-pointer"
+                  >
+                    مسح
+                  </button>
+                )}
               </div>
             )}
           </div>
 
           {/* Requests List */}
           {requests === undefined ? (
-            <div className="flex items-center justify-center py-16">
-              <Spinner size="lg" />
+            <div className="space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <RequestCardSkeleton key={i} />
+              ))}
             </div>
-          ) : requests.length === 0 ? (
+          ) : filteredRequests.length === 0 ? (
             <div className="text-center py-16">
               <div className="w-20 h-20 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-4">
                 <FileText className="h-10 w-10 text-neutral-400" />
@@ -146,7 +211,7 @@ export default function RequestsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {requests.map((req) => (
+              {filteredRequests.map((req) => (
                 <Link key={req._id} href={`/requests/${req._id}`}>
                   <Card hover className="mb-4">
                     <CardContent>

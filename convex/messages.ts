@@ -131,11 +131,13 @@ export const listByJob = query({
     // Only parties can view messages
     if (job.customerId !== user._id && job.providerId !== user._id) return [];
 
-    const messages = await ctx.db
+    // Fetch last 50 messages for performance
+    const messagesDesc = await ctx.db
       .query("messages")
       .withIndex("by_jobId", (q) => q.eq("jobId", jobId))
-      .order("asc")
-      .collect();
+      .order("desc")
+      .take(50);
+    const messages = messagesDesc.reverse();
 
     // Enrich with sender info
     const enriched = await Promise.all(

@@ -210,15 +210,15 @@ Implement search, filtering, and performance optimization.
 
 ### Tasks
 
-- [ ] 11.1 — Implement full-text search on providers (name, bio, services) using Convex search indexes
-- [ ] 11.2 — Implement full-text search on service listings (title, description)
-- [ ] 11.3 — Build search results page with combined provider and service results
-- [ ] 11.4 — Add filters on category pages: city, price range, minimum rating
-- [ ] 11.5 — Add filters on requests page: city, category, budget range
-- [ ] 11.6 — Implement image compression/resizing on upload (before storing in Convex)
-- [ ] 11.7 — Optimize public pages for LCP < 2.5s: lazy-load images, optimize server component data fetching
-- [ ] 11.8 — Ensure real-time chat latency < 500ms under normal load
-- [ ] 11.9 — Add loading skeletons for all data-fetching pages
+- [x] 11.1 — Implement full-text search on providers (name, bio, services) using Convex search indexes
+- [x] 11.2 — Implement full-text search on service listings (title, description)
+- [x] 11.3 — Build search results page with combined provider and service results
+- [x] 11.4 — Add filters on category pages: city, price range, minimum rating
+- [x] 11.5 — Add filters on requests page: city, category, budget range
+- [x] 11.6 — Implement image compression/resizing on upload (before storing in Convex)
+- [x] 11.7 — Optimize public pages for LCP < 2.5s: lazy-load images, optimize server component data fetching
+- [x] 11.8 — Ensure real-time chat latency < 500ms under normal load
+- [x] 11.9 — Add loading skeletons for all data-fetching pages
 
 ---
 

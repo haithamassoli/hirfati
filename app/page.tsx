@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const stats = [
   { label: "حرفي مسجل", value: "+500", icon: Users },
@@ -35,6 +37,15 @@ const stats = [
 export default function HomePage() {
   const categories = useQuery(api.categories.listMain);
   const featuredProviders = useQuery(api.providers.listFeatured);
+  const router = useRouter();
+  const [searchValue, setSearchValue] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchValue.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchValue.trim())}`);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -65,17 +76,19 @@ export default function HomePage() {
             </p>
 
             {/* Search Bar */}
-            <div className="max-w-2xl mx-auto">
+            <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
               <div className="flex gap-2 bg-surface rounded-2xl p-2 shadow-lg border border-border">
                 <div className="flex-1 relative">
                   <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
                   <input
                     type="text"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
                     placeholder="ابحث عن خدمة... مثال: إصلاح حنفية"
                     className="w-full pr-12 pl-4 py-3.5 rounded-xl bg-transparent text-foreground placeholder:text-neutral-400 focus:outline-none text-sm"
                   />
                 </div>
-                <Button size="lg" className="rounded-xl px-8">
+                <Button type="submit" size="lg" className="rounded-xl px-8">
                   ابحث
                 </Button>
               </div>
@@ -83,27 +96,27 @@ export default function HomePage() {
               <div className="flex items-center justify-center gap-2 mt-4 text-sm text-neutral-500">
                 <span>الأكثر بحثاً:</span>
                 <Link
-                  href="/categories/plumbing"
+                  href="/search?q=سباكة"
                   className="text-primary-600 hover:underline"
                 >
                   سباكة
                 </Link>
                 <span>·</span>
                 <Link
-                  href="/categories/electrical"
+                  href="/search?q=كهرباء"
                   className="text-primary-600 hover:underline"
                 >
                   كهرباء
                 </Link>
                 <span>·</span>
                 <Link
-                  href="/categories/painting"
+                  href="/search?q=دهان"
                   className="text-primary-600 hover:underline"
                 >
                   دهان
                 </Link>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </section>

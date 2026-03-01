@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
-import { Spinner } from "@/components/ui/spinner";
+import { DashboardStatsSkeleton } from "@/components/ui/skeleton";
 import {
   Briefcase,
   User,
@@ -55,8 +55,8 @@ export default function DashboardPage() {
 
   if (user === undefined || summary === undefined) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Spinner size="lg" />
+      <div className="max-w-5xl mx-auto py-6">
+        <DashboardStatsSkeleton />
       </div>
     );
   }

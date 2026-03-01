@@ -66,9 +66,137 @@ export const list = query({
         const hasPremium =
           provider.isPremium || premiumProviderIds.has(provider._id);
 
+        // Compute price range from active services
+        const prices = activeServices
+          .filter((s) => s.price > 0)
+          .map((s) => s.price);
+        const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+        const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+
         return {
           ...provider,
           isPremium: hasPremium,
+          avgRating: Math.round(avgRating * 10) / 10,
+          reviewCount: reviews.length,
+          serviceCount: activeServices.length,
+          minPrice,
+          maxPrice,
+        };
+      })
+    );
+
+    // Sort: premium first, then by rating
+    return providersWithRating.sort((a, b) => {
+      if (a.isPremium && !b.isPremium) return -1;
+      if (!a.isPremium && b.isPremium) return 1;
+      return b.avgRating - a.avgRating;
+    });
+  },
+});
+
+export const search = query({
+  args: {
+    term: v.string(),
+    city: v.optional(
+      v.union(v.literal("amman"), v.literal("irbid"), v.literal("zarqa"))
+    ),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, { term, city, limit }) => {
+    const maxResults = limit ?? 20;
+
+    // 1. Search users by name using the search index
+    let userResults = await ctx.db
+      .query("users")
+      .withSearchIndex("search_name", (q) => {
+        const sq = q.search("name", term);
+        return sq.eq("isProvider", true);
+      })
+      .take(maxResults);
+
+    // Filter by city in JS (serviceArea is an array, not a scalar)
+    if (city) {
+      userResults = userResults.filter(
+        (u) => u.serviceArea && u.serviceArea.includes(city)
+      );
+    }
+
+    // Only complete profiles
+    userResults = userResults.filter((u) => u.isProfileComplete);
+
+    // 2. Also search services by title to find providers with matching services
+    const serviceResults = await ctx.db
+      .query("services")
+      .withSearchIndex("search_title", (q) => {
+        return q.search("title", term).eq("isActive", true);
+      })
+      .take(50);
+
+    // Get unique provider IDs from service matches
+    const existingIds = new Set(userResults.map((u) => u._id));
+    const additionalProviderIds = [
+      ...new Set(serviceResults.map((s) => s.providerId)),
+    ].filter((id) => !existingIds.has(id));
+
+    // Fetch additional providers from service matches
+    const additionalProviders = (
+      await Promise.all(additionalProviderIds.map((id) => ctx.db.get(id)))
+    ).filter(
+      (p): p is NonNullable<typeof p> =>
+        p !== null &&
+        p.isProvider &&
+        !!p.isProfileComplete &&
+        (!city || (p.serviceArea ? p.serviceArea.includes(city) : false))
+    );
+
+    const allProviders = [...userResults, ...additionalProviders].slice(
+      0,
+      maxResults
+    );
+
+    // Enrich with ratings, services, premium status
+    const now = Date.now();
+    const activePremiumOrders = await ctx.db
+      .query("premium_orders")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .collect();
+    const premiumProviderIds = new Set(
+      activePremiumOrders
+        .filter((o) => o.endDate > now)
+        .map((o) => o.providerId)
+    );
+
+    const enriched = await Promise.all(
+      allProviders.map(async (provider) => {
+        const reviews = await ctx.db
+          .query("reviews")
+          .withIndex("by_providerId", (q) =>
+            q.eq("providerId", provider._id)
+          )
+          .collect();
+        const avgRating =
+          reviews.length > 0
+            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+            : 0;
+        const services = await ctx.db
+          .query("services")
+          .withIndex("by_providerId", (q) =>
+            q.eq("providerId", provider._id)
+          )
+          .collect();
+        const activeServices = services.filter((s) => s.isActive);
+        const avatarUrl = provider.avatarStorageId
+          ? await ctx.storage.getUrl(provider.avatarStorageId)
+          : provider.avatarUrl;
+
+        return {
+          _id: provider._id,
+          name: provider.name,
+          bio: provider.bio,
+          avatarUrl: avatarUrl ?? undefined,
+          serviceArea: provider.serviceArea,
+          isPremium:
+            provider.isPremium || premiumProviderIds.has(provider._id),
           avgRating: Math.round(avgRating * 10) / 10,
           reviewCount: reviews.length,
           serviceCount: activeServices.length,
@@ -76,8 +204,7 @@ export const list = query({
       })
     );
 
-    // Sort: premium first, then by rating
-    return providersWithRating.sort((a, b) => {
+    return enriched.sort((a, b) => {
       if (a.isPremium && !b.isPremium) return -1;
       if (!a.isPremium && b.isPremium) return 1;
       return b.avgRating - a.avgRating;

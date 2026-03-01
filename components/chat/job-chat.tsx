@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { compressImage } from "@/lib/image-compress";
 
 interface JobChatProps {
   jobId: Id<"jobs">;
@@ -85,11 +86,16 @@ export function JobChat({ jobId, isChatEligible }: JobChatProps) {
 
       setIsUploading(true);
       try {
+        const compressed = await compressImage(file, {
+          maxWidth: 1000,
+          maxHeight: 1000,
+          quality: 0.8,
+        });
         const uploadUrl = await generateUploadUrl();
         const result = await fetch(uploadUrl, {
           method: "POST",
-          headers: { "Content-Type": file.type },
-          body: file,
+          headers: { "Content-Type": "image/webp" },
+          body: compressed,
         });
         const { storageId } = await result.json();
         await sendImage({
