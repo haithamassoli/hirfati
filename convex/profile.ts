@@ -99,6 +99,39 @@ export const updateProfile = mutation({
   },
 });
 
+// Toggle role between customer and provider (for dashboard view switching)
+export const toggleRole = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("غير مصرح");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .first();
+    if (!user) throw new Error("المستخدم غير موجود");
+
+    const newIsProvider = !user.isProvider;
+
+    // Recalculate profile completeness
+    const isProfileComplete =
+      newIsProvider &&
+      user.name.length > 0 &&
+      (user.bio?.length ?? 0) > 0 &&
+      (user.tradeCategories?.length ?? 0) > 0 &&
+      (user.serviceArea?.length ?? 0) > 0;
+
+    await ctx.db.patch(user._id, {
+      isProvider: newIsProvider,
+      role: newIsProvider ? "provider" : "customer",
+      isProfileComplete,
+    });
+
+    return { success: true, isProvider: newIsProvider };
+  },
+});
+
 export const updateAvatar = mutation({
   args: {
     storageId: v.id("_storage"),

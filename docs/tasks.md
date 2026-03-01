@@ -154,13 +154,13 @@ Build the role-aware authenticated dashboard.
 
 ### Tasks
 
-- [ ] 8.1 — Build dashboard layout with sidebar/nav: role-aware menu items (customer vs provider sections)
-- [ ] 8.2 — Build dashboard home page (`/dashboard`) with summary cards: active jobs count, pending quotes, unread messages, recent activity
-- [ ] 8.3 — Customer dashboard view: my requests summary, active jobs, recent reviews given
-- [ ] 8.4 — Provider dashboard view: my services summary, new requests matching my profile, active jobs, recent reviews received
-- [ ] 8.5 — Implement role toggle: allow a single account to switch between customer and provider views
-- [ ] 8.6 — Build responsive dashboard layout (sidebar collapses to bottom nav on mobile)
-- [ ] 8.7 — Add empty states and onboarding prompts (e.g., "Complete your provider profile to start receiving jobs")
+- [x] 8.1 — Build dashboard layout with sidebar/nav: role-aware menu items (customer vs provider sections)
+- [x] 8.2 — Build dashboard home page (`/dashboard`) with summary cards: active jobs count, pending quotes, unread messages, recent activity
+- [x] 8.3 — Customer dashboard view: my requests summary, active jobs, recent reviews given
+- [x] 8.4 — Provider dashboard view: my services summary, new requests matching my profile, active jobs, recent reviews received
+- [x] 8.5 — Implement role toggle: allow a single account to switch between customer and provider views
+- [x] 8.6 — Build responsive dashboard layout (sidebar collapses to bottom nav on mobile)
+- [x] 8.7 — Add empty states and onboarding prompts (e.g., "Complete your provider profile to start receiving jobs")
 
 ---
 
