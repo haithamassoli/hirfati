@@ -9,20 +9,31 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+type IOSNavigator = Navigator & { standalone?: boolean };
+
+function isStandaloneMode() {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (window.navigator as IOSNavigator).standalone === true
+  );
+}
+
+function isIOSDevice() {
+  if (typeof window === "undefined") return false;
+  const hasMSStream = "MSStream" in window;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !hasMSStream;
+}
+
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
+  const [isIOS] = useState(() => isIOSDevice());
+  const [isStandalone] = useState(() => isStandaloneMode());
 
   useEffect(() => {
-    // Check if already in standalone mode
-    const standalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true;
-    setIsStandalone(standalone);
-    if (standalone) return;
+    if (isStandalone) return;
 
     // Check if already dismissed
     const dismissed = localStorage.getItem("install-prompt-dismissed");
@@ -32,28 +43,28 @@ export function InstallPrompt() {
       if (Date.now() - dismissedAt < 7 * 24 * 60 * 60 * 1000) return;
     }
 
-    // Detect iOS
-    const isIOSDevice =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(isIOSDevice);
+    let showTimer: ReturnType<typeof setTimeout> | null = null;
 
     // Listen for the beforeinstallprompt event (Android/Chrome)
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       // Show prompt after a delay
-      setTimeout(() => setVisible(true), 5000);
+      showTimer = setTimeout(() => setVisible(true), 5000);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
 
     // On iOS, show manual install instructions after delay
-    if (isIOSDevice) {
-      setTimeout(() => setVisible(true), 5000);
+    if (isIOS) {
+      showTimer = setTimeout(() => setVisible(true), 5000);
     }
 
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      if (showTimer) clearTimeout(showTimer);
+    };
+  }, [isIOS, isStandalone]);
 
   const handleInstall = async () => {
     if (deferredPrompt) {

@@ -11,15 +11,17 @@ import { Star, MessageSquareText, Send, Inbox } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import type { FunctionReturnType } from "convex/server";
 
 type Tab = "received" | "given";
+type ReviewsResult = NonNullable<FunctionReturnType<typeof api.reviews.listByCurrentUser>>;
+type GivenReview = ReviewsResult["given"][number];
+type ReceivedReview = ReviewsResult["received"][number];
 
 export default function ReviewsDashboardPage() {
   const data = useQuery(api.reviews.listByCurrentUser);
   const user = useQuery(api.profile.getCurrentUser);
-  const [activeTab, setActiveTab] = useState<Tab>(
-    user?.isProvider ? "received" : "given"
-  );
+  const [activeTab, setActiveTab] = useState<Tab>("received");
 
   if (data === undefined) {
     return (
@@ -29,22 +31,37 @@ export default function ReviewsDashboardPage() {
     );
   }
 
-  const tabs: Array<{ key: Tab; label: string; icon: typeof Star; count: number }> = [
-    ...(user?.isProvider
-      ? [{ key: "received" as Tab, label: "تقييمات واردة", icon: Inbox, count: data.received.length }]
-      : []),
-    { key: "given" as Tab, label: "تقييمات أرسلتها", icon: Send, count: data.given.length },
-    ...(!user?.isProvider
-      ? []
-      : [{ key: "given" as Tab, label: "تقييمات أرسلتها", icon: Send, count: data.given.length }]),
-  ];
+  const tabs: Array<{
+    key: Tab;
+    label: string;
+    icon: typeof Star;
+    count: number;
+  }> = user?.isProvider
+    ? [
+        {
+          key: "received",
+          label: "تقييمات واردة",
+          icon: Inbox,
+          count: data.received.length,
+        },
+        {
+          key: "given",
+          label: "تقييمات أرسلتها",
+          icon: Send,
+          count: data.given.length,
+        },
+      ]
+    : [
+        {
+          key: "given",
+          label: "تقييمات أرسلتها",
+          icon: Send,
+          count: data.given.length,
+        },
+      ];
 
-  // Deduplicate tabs
-  const uniqueTabs = tabs.filter(
-    (tab, index, self) => self.findIndex((t) => t.key === tab.key) === index
-  );
-
-  const activeReviews = activeTab === "received" ? data.received : data.given;
+  const selectedTab: Tab = user?.isProvider ? activeTab : "given";
+  const activeReviews = selectedTab === "received" ? data.received : data.given;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -109,9 +126,9 @@ export default function ReviewsDashboardPage() {
       </div>
 
       {/* Tabs */}
-      {uniqueTabs.length > 1 && (
+      {tabs.length > 1 && (
         <div className="flex gap-1 bg-neutral-100 p-1 rounded-xl w-fit">
-          {uniqueTabs.map((tab) => {
+          {tabs.map((tab) => {
             const TabIcon = tab.icon;
             return (
               <button
@@ -119,7 +136,7 @@ export default function ReviewsDashboardPage() {
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer",
-                  activeTab === tab.key
+                  selectedTab === tab.key
                     ? "bg-white text-foreground shadow-sm"
                     : "text-neutral-500 hover:text-neutral-700"
                 )}
@@ -127,7 +144,7 @@ export default function ReviewsDashboardPage() {
                 <TabIcon className="h-4 w-4" />
                 {tab.label}
                 <Badge
-                  variant={activeTab === tab.key ? "primary" : "default"}
+                  variant={selectedTab === tab.key ? "primary" : "default"}
                   className="text-[10px] px-1.5 py-0"
                 >
                   {tab.count}
@@ -148,77 +165,87 @@ export default function ReviewsDashboardPage() {
             لا توجد تقييمات بعد
           </h3>
           <p className="text-neutral-500 text-sm">
-            {activeTab === "received"
+            {selectedTab === "received"
               ? "ستظهر هنا التقييمات التي يرسلها لك العملاء"
               : "ستظهر هنا التقييمات التي أرسلتها بعد إكمال المهام"}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
-          {activeReviews.map((review) => {
-            const name =
-              activeTab === "received"
-                ? (review as any).reviewerName
-                : (review as any).providerName;
-            const avatar =
-              activeTab === "received"
-                ? (review as any).reviewerAvatar
-                : (review as any).providerAvatar;
-
-            return (
-              <Card key={review._id} className="hover:shadow-md transition-shadow">
-                <CardContent>
-                  <div className="flex items-start gap-4">
-                    <Avatar src={avatar} alt={name} size="md" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-foreground">
-                            {name}
-                          </span>
-                          <span className="text-xs text-neutral-400">
-                            {activeTab === "received" ? "عميل" : "حرفي"}
-                          </span>
-                        </div>
-                        <span className="text-xs text-neutral-400 shrink-0">
-                          {new Date(review._creationTime).toLocaleDateString(
-                            "ar-JO",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )}
-                        </span>
-                      </div>
-
-                      <StarRating
-                        rating={review.rating}
-                        size="sm"
-                        showValue={false}
-                      />
-
-                      <p className="text-sm text-neutral-600 leading-relaxed mt-2">
-                        {review.comment}
-                      </p>
-
-                      {review.jobTitle && (
-                        <Link
-                          href={`/dashboard/jobs/${review.jobId}`}
-                          className="inline-flex items-center gap-1 text-xs text-primary-500 hover:text-primary-600 mt-2 transition-colors"
-                        >
-                          <MessageSquareText className="h-3 w-3" />
-                          {review.jobTitle}
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {selectedTab === "received"
+            ? data.received.map((review) => (
+                <ReviewCard
+                  key={review._id}
+                  review={review}
+                  avatar={review.reviewerAvatar}
+                  name={review.reviewerName}
+                  roleLabel="عميل"
+                />
+              ))
+            : data.given.map((review) => (
+                <ReviewCard
+                  key={review._id}
+                  review={review}
+                  avatar={review.providerAvatar}
+                  name={review.providerName}
+                  roleLabel="حرفي"
+                />
+              ))}
         </div>
       )}
     </div>
+  );
+}
+
+function ReviewCard({
+  review,
+  avatar,
+  name,
+  roleLabel,
+}: {
+  review: GivenReview | ReceivedReview;
+  avatar: string | undefined;
+  name: string;
+  roleLabel: string;
+}) {
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardContent>
+        <div className="flex items-start gap-4">
+          <Avatar src={avatar} alt={name} size="md" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-foreground">{name}</span>
+                <span className="text-xs text-neutral-400">{roleLabel}</span>
+              </div>
+              <span className="text-xs text-neutral-400 shrink-0">
+                {new Date(review._creationTime).toLocaleDateString("ar-JO", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+            </div>
+
+            <StarRating rating={review.rating} size="sm" showValue={false} />
+
+            <p className="text-sm text-neutral-600 leading-relaxed mt-2">
+              {review.comment}
+            </p>
+
+            {review.jobTitle && (
+              <Link
+                href={`/dashboard/jobs/${review.jobId}`}
+                className="inline-flex items-center gap-1 text-xs text-primary-500 hover:text-primary-600 mt-2 transition-colors"
+              >
+                <MessageSquareText className="h-3 w-3" />
+                {review.jobTitle}
+              </Link>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

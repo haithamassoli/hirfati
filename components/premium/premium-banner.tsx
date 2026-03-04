@@ -2,7 +2,6 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Card, CardContent } from "@/components/ui/card";
 import { PremiumBadge } from "@/components/ui/premium-badge";
 import { StarRating } from "@/components/ui/star-rating";
 import { cityLabels } from "@/lib/constants";

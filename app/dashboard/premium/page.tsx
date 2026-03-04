@@ -20,6 +20,7 @@ import {
   MegaphoneIcon,
 } from "lucide-react";
 import { useState } from "react";
+import { getErrorMessage } from "@/lib/utils";
 
 type PlanType = "visibility_boost" | "ad";
 type Duration = 7 | 30;
@@ -140,8 +141,8 @@ export default function PremiumPage() {
         "تم إنشاء الطلب بنجاح! سيتم تفعيله بعد مراجعة الإدارة."
       );
       setSelectedPlan(null);
-    } catch (err: any) {
-      alert(err.message || "حدث خطأ أثناء إنشاء الطلب");
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, "حدث خطأ أثناء إنشاء الطلب"));
     } finally {
       setIsSubmitting(false);
     }

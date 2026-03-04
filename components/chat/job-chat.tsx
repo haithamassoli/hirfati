@@ -17,6 +17,7 @@ import {
 import Image from "next/image";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { compressImage } from "@/lib/image-compress";
+import { getErrorMessage } from "@/lib/utils";
 
 interface JobChatProps {
   jobId: Id<"jobs">;
@@ -62,8 +63,8 @@ export function JobChat({ jobId, isChatEligible }: JobChatProps) {
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
-    } catch (err: any) {
-      alert(err.message || "حدث خطأ في إرسال الرسالة");
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, "حدث خطأ في إرسال الرسالة"));
     } finally {
       setIsSending(false);
     }
@@ -104,8 +105,8 @@ export function JobChat({ jobId, isChatEligible }: JobChatProps) {
           jobId,
           imageStorageId: storageId as Id<"_storage">,
         });
-      } catch (err: any) {
-        alert(err.message || "حدث خطأ في رفع الصورة");
+      } catch (err: unknown) {
+        alert(getErrorMessage(err, "حدث خطأ في رفع الصورة"));
       } finally {
         setIsUploading(false);
         if (fileInputRef.current) {

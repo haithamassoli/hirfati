@@ -16,7 +16,6 @@ import {
   Plus,
   Trash2,
   ImageIcon,
-  GripVertical,
   CheckCircle2,
 } from "lucide-react";
 import Image from "next/image";
@@ -33,7 +32,6 @@ export default function ProfileEditPage() {
   const updateAvatar = useMutation(api.profile.updateAvatar);
   const addPortfolioImage = useMutation(api.profile.addPortfolioImage);
   const deletePortfolioImage = useMutation(api.profile.deletePortfolioImage);
-  const updatePortfolioCaption = useMutation(api.profile.updatePortfolioCaption);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 
   const [name, setName] = useState("");

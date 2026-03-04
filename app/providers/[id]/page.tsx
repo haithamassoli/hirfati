@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Modal } from "@/components/ui/modal";
 import type { Id } from "@/convex/_generated/dataModel";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function ProviderProfilePage({
   params,
@@ -63,8 +64,8 @@ export default function ProviderProfilePage({
       });
       setShowHireModal(false);
       router.push(`/dashboard/jobs/${jobId}`);
-    } catch (err: any) {
-      alert(err.message || "حدث خطأ");
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, "حدث خطأ"));
     } finally {
       setHireLoading(false);
     }

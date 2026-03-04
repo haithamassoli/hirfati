@@ -29,8 +29,10 @@ import {
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { NotificationPrompt } from "@/components/pwa/notification-prompt";
+import type { FunctionReturnType } from "convex/server";
 
 type Role = "customer" | "provider";
+type CurrentUser = NonNullable<FunctionReturnType<typeof api.profile.getCurrentUser>>;
 
 interface SidebarLink {
   href: string;
@@ -324,7 +326,7 @@ function SidebarContent({
   onClose,
   showClose,
 }: {
-  user: Record<string, any> | null;
+  user: CurrentUser | null;
   mainLinks: SidebarLink[];
   roleLinks: SidebarLink[];
   role: Role;

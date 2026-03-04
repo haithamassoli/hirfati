@@ -34,6 +34,17 @@ import {
 import Link from "next/link";
 import { use, useState, useCallback } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
+import { getErrorMessage } from "@/lib/utils";
+
+type JobTransitionStatus =
+  | "accepted"
+  | "in_progress"
+  | "completed"
+  | "confirmed"
+  | "reviewed"
+  | "cancelled"
+  | "disputed";
+type ConfirmAction = "accept_direct" | "reject_direct" | JobTransitionStatus;
 
 const statusConfig: Record<
   string,
@@ -75,23 +86,23 @@ export default function JobDetailPage({
   const respondToDirectHire = useMutation(api.jobs.respondToDirectHire);
   const submitReview = useMutation(api.reviews.submit);
 
-  const [confirmAction, setConfirmAction] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   const handleTransition = useCallback(
-    async (newStatus: string) => {
+    async (newStatus: JobTransitionStatus) => {
       setIsSubmitting(true);
       try {
         await transitionStatus({
           jobId: id as Id<"jobs">,
-          newStatus: newStatus as any,
+          newStatus,
         });
         setConfirmAction(null);
-      } catch (err: any) {
-        alert(err.message || "حدث خطأ");
+      } catch (err: unknown) {
+        alert(getErrorMessage(err, "حدث خطأ"));
       } finally {
         setIsSubmitting(false);
       }
@@ -108,8 +119,8 @@ export default function JobDetailPage({
           accept,
         });
         setConfirmAction(null);
-      } catch (err: any) {
-        alert(err.message || "حدث خطأ");
+      } catch (err: unknown) {
+        alert(getErrorMessage(err, "حدث خطأ"));
       } finally {
         setIsSubmitting(false);
       }
@@ -128,8 +139,8 @@ export default function JobDetailPage({
       });
       setReviewRating(0);
       setReviewComment("");
-    } catch (err: any) {
-      alert(err.message || "حدث خطأ في إرسال التقييم");
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, "حدث خطأ في إرسال التقييم"));
     } finally {
       setIsSubmittingReview(false);
     }
@@ -164,7 +175,7 @@ export default function JobDetailPage({
 
   // Determine available actions
   const actions: Array<{
-    key: string;
+    key: ConfirmAction;
     label: string;
     icon: typeof Play;
     variant: "primary" | "secondary" | "accent" | "danger";
