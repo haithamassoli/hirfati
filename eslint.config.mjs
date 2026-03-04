@@ -1,8 +1,10 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import convexPlugin from "@convex-dev/eslint-plugin";
 
 const eslintConfig = defineConfig([
+  ...convexPlugin.configs.recommended,
   ...nextVitals,
   ...nextTs,
   // Override default ignores of eslint-config-next.

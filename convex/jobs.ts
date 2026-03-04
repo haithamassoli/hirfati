@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
+import { getOptionalAuthUser, requireAuthUser } from "./lib/auth";
 
 // Valid job status transitions
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -14,19 +15,6 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   cancelled: [],
   disputed: [],
 };
-
-// Helper to get the authenticated user
-async function getAuthUser(ctx: any) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("غير مصرح");
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_email", (q: any) => q.eq("email", identity.email!))
-    .first();
-  if (!user) throw new Error("المستخدم غير موجود");
-  return user;
-}
 
 // Transition job status with validation
 export const transitionStatus = mutation({
@@ -42,20 +30,21 @@ export const transitionStatus = mutation({
       v.literal("disputed")
     ),
   },
+  returns: v.any(),
   handler: async (ctx, { jobId, newStatus }) => {
-    const user = await getAuthUser(ctx);
+    const user = await requireAuthUser(ctx);
     const job = await ctx.db.get(jobId);
-    if (!job) throw new Error("المهمة غير موجودة");
+    if (!job) throw new ConvexError("المهمة غير موجودة");
 
     // Verify user is part of the job
     const isCustomer = job.customerId === user._id;
     const isProvider = job.providerId === user._id;
-    if (!isCustomer && !isProvider) throw new Error("غير مصرح بتعديل هذه المهمة");
+    if (!isCustomer && !isProvider) throw new ConvexError("غير مصرح بتعديل هذه المهمة");
 
     // Validate the transition
     const validNext = VALID_TRANSITIONS[job.status];
     if (!validNext || !validNext.includes(newStatus)) {
-      throw new Error(
+      throw new ConvexError(
         `لا يمكن الانتقال من "${job.status}" إلى "${newStatus}"`
       );
     }
@@ -67,22 +56,22 @@ export const transitionStatus = mutation({
         break;
       case "completed":
         // Provider only
-        if (!isProvider) throw new Error("فقط الحرفي يمكنه تحديد المهمة كمكتملة");
+        if (!isProvider) throw new ConvexError("فقط الحرفي يمكنه تحديد المهمة كمكتملة");
         break;
       case "confirmed":
         // Customer only
-        if (!isCustomer) throw new Error("فقط العميل يمكنه تأكيد اكتمال المهمة");
+        if (!isCustomer) throw new ConvexError("فقط العميل يمكنه تأكيد اكتمال المهمة");
         break;
       case "cancelled":
         // Either party, only before in_progress
         if (job.status === "in_progress" || job.status === "completed") {
-          throw new Error("لا يمكن إلغاء المهمة بعد البدء بها");
+          throw new ConvexError("لا يمكن إلغاء المهمة بعد البدء بها");
         }
         break;
       case "disputed":
         // Either party, from in_progress or completed
         if (job.status !== "in_progress" && job.status !== "completed") {
-          throw new Error("لا يمكن رفع نزاع في هذه المرحلة");
+          throw new ConvexError("لا يمكن رفع نزاع في هذه المرحلة");
         }
         break;
     }
@@ -115,14 +104,9 @@ export const transitionStatus = mutation({
 // Get job detail with all related data
 export const getDetail = query({
   args: { id: v.id("jobs") },
+  returns: v.any(),
   handler: async (ctx, { id }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
-      .first();
+    const user = await getOptionalAuthUser(ctx);
     if (!user) return null;
 
     const job = await ctx.db.get(id);
@@ -186,14 +170,9 @@ export const listByUser = query({
   args: {
     filter: v.optional(v.union(v.literal("active"), v.literal("past"))),
   },
+  returns: v.any(),
   handler: async (ctx, { filter }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
-      .first();
+    const user = await getOptionalAuthUser(ctx);
     if (!user) return [];
 
     // Get jobs where user is customer or provider
@@ -263,17 +242,18 @@ export const directHire = mutation({
     description: v.string(),
     price: v.optional(v.number()),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
-    const user = await getAuthUser(ctx);
+    const user = await requireAuthUser(ctx);
 
     // Cannot hire yourself
     if (args.providerId === user._id) {
-      throw new Error("لا يمكنك توظيف نفسك");
+      throw new ConvexError("لا يمكنك توظيف نفسك");
     }
 
     const provider = await ctx.db.get(args.providerId);
-    if (!provider) throw new Error("الحرفي غير موجود");
-    if (!provider.isProvider) throw new Error("هذا المستخدم ليس حرفياً");
+    if (!provider) throw new ConvexError("الحرفي غير موجود");
+    if (!provider.isProvider) throw new ConvexError("هذا المستخدم ليس حرفياً");
 
     const jobId = await ctx.db.insert("jobs", {
       customerId: user._id,
@@ -311,12 +291,13 @@ export const respondToDirectHire = mutation({
     accept: v.boolean(),
     price: v.optional(v.number()),
   },
+  returns: v.any(),
   handler: async (ctx, { jobId, accept, price }) => {
-    const user = await getAuthUser(ctx);
+    const user = await requireAuthUser(ctx);
     const job = await ctx.db.get(jobId);
-    if (!job) throw new Error("المهمة غير موجودة");
-    if (job.providerId !== user._id) throw new Error("غير مصرح");
-    if (job.status !== "requested") throw new Error("المهمة ليست في حالة طلب");
+    if (!job) throw new ConvexError("المهمة غير موجودة");
+    if (job.providerId !== user._id) throw new ConvexError("غير مصرح");
+    if (job.status !== "requested") throw new ConvexError("المهمة ليست في حالة طلب");
 
     if (accept) {
       await ctx.db.patch(jobId, {

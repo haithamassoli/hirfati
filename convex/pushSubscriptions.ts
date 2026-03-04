@@ -1,18 +1,6 @@
 import { mutation, query, internalQuery, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
-
-// Helper to get the authenticated user
-async function getAuthUser(ctx: any) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("غير مصرح");
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_email", (q: any) => q.eq("email", identity.email!))
-    .first();
-  if (!user) throw new Error("المستخدم غير موجود");
-  return user;
-}
+import { getOptionalAuthUser, requireAuthUser } from "./lib/auth";
 
 // Save a push subscription for the current user
 export const save = mutation({
@@ -21,8 +9,9 @@ export const save = mutation({
     p256dh: v.string(),
     auth: v.string(),
   },
+  returns: v.any(),
   handler: async (ctx, { endpoint, p256dh, auth }) => {
-    const user = await getAuthUser(ctx);
+    const user = await requireAuthUser(ctx);
 
     // Check if subscription already exists
     const existing = await ctx.db
@@ -52,8 +41,9 @@ export const remove = mutation({
   args: {
     endpoint: v.string(),
   },
+  returns: v.any(),
   handler: async (ctx, { endpoint }) => {
-    const user = await getAuthUser(ctx);
+    const user = await requireAuthUser(ctx);
 
     const existing = await ctx.db
       .query("push_subscriptions")
@@ -72,14 +62,9 @@ export const remove = mutation({
 // Check if current user has an active push subscription
 export const hasSubscription = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return false;
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
-      .first();
+    const user = await getOptionalAuthUser(ctx);
     if (!user) return false;
 
     const sub = await ctx.db
@@ -94,6 +79,7 @@ export const hasSubscription = query({
 // Internal query: get subscriptions for a user (used by notifications action)
 export const getByUserIdInternal = internalQuery({
   args: { userId: v.id("users") },
+  returns: v.any(),
   handler: async (ctx, { userId }) => {
     return await ctx.db
       .query("push_subscriptions")
@@ -105,6 +91,7 @@ export const getByUserIdInternal = internalQuery({
 // Internal mutation: remove a subscription by ID (for expired subs cleanup)
 export const removeById = internalMutation({
   args: { id: v.id("push_subscriptions") },
+  returns: v.any(),
   handler: async (ctx, { id }) => {
     const sub = await ctx.db.get(id);
     if (sub) {

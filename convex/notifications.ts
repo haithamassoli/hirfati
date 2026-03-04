@@ -28,6 +28,7 @@ export const sendToUser = internalAction({
     jobId: v.optional(v.string()),
     tag: v.optional(v.string()),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
 
@@ -59,9 +60,15 @@ export const sendToUser = internalAction({
             },
             payload
           );
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const statusCode =
+            typeof error === "object" &&
+            error !== null &&
+            "statusCode" in error
+              ? (error as { statusCode?: number }).statusCode
+              : undefined;
           // If subscription is expired/invalid, remove it
-          if (error?.statusCode === 410 || error?.statusCode === 404) {
+          if (statusCode === 410 || statusCode === 404) {
             await ctx.runMutation(
               internal.pushSubscriptions.removeById,
               { id: sub._id }
@@ -81,6 +88,7 @@ export const notifyNewQuote = internalAction({
     requestTitle: v.string(),
     requestId: v.string(),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     await ctx.runAction(internal.notifications.sendToUser, {
       userId: args.customerId,
@@ -102,6 +110,7 @@ export const notifyQuoteResponse = internalAction({
     requestTitle: v.string(),
     jobId: v.optional(v.string()),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const title = args.accepted ? "تم قبول عرضك" : "تم رفض عرضك";
     const body = args.accepted
@@ -130,6 +139,7 @@ export const notifyNewMessage = internalAction({
     jobId: v.string(),
     preview: v.string(),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     await ctx.runAction(internal.notifications.sendToUser, {
       userId: args.recipientId,
@@ -151,6 +161,7 @@ export const notifyJobStatusChange = internalAction({
     newStatus: v.string(),
     jobId: v.string(),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const statusLabels: Record<string, string> = {
       in_progress: "قيد التنفيذ",

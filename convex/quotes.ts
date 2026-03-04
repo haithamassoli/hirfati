@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 // Submit a quote on a request (one per provider per request)
 export const submit = mutation({
@@ -10,22 +10,23 @@ export const submit = mutation({
     estimatedDuration: v.string(),
     message: v.string(),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
-    if (!user) throw new Error("المستخدم غير موجود");
-    if (!user.isProvider) throw new Error("يجب أن تكون حرفياً لتقديم عرض سعر");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
+    if (!user.isProvider) throw new ConvexError("يجب أن تكون حرفياً لتقديم عرض سعر");
 
     const request = await ctx.db.get(args.requestId);
-    if (!request) throw new Error("الطلب غير موجود");
-    if (request.status !== "open") throw new Error("الطلب لم يعد مفتوحاً");
+    if (!request) throw new ConvexError("الطلب غير موجود");
+    if (request.status !== "open") throw new ConvexError("الطلب لم يعد مفتوحاً");
     if (request.customerId === user._id)
-      throw new Error("لا يمكنك تقديم عرض على طلبك");
+      throw new ConvexError("لا يمكنك تقديم عرض على طلبك");
 
     // Check if already quoted
     const existing = await ctx.db
@@ -35,7 +36,7 @@ export const submit = mutation({
       )
       .first();
     if (existing && existing.status !== "withdrawn")
-      throw new Error("لقد قدمت عرضاً على هذا الطلب بالفعل");
+      throw new ConvexError("لقد قدمت عرضاً على هذا الطلب بالفعل");
 
     const quoteId = await ctx.db.insert("quotes", {
       requestId: args.requestId,
@@ -63,22 +64,23 @@ export const withdraw = mutation({
   args: {
     quoteId: v.id("quotes"),
   },
+  returns: v.any(),
   handler: async (ctx, { quoteId }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
-    if (!user) throw new Error("المستخدم غير موجود");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
 
     const quote = await ctx.db.get(quoteId);
-    if (!quote) throw new Error("العرض غير موجود");
+    if (!quote) throw new ConvexError("العرض غير موجود");
     if (quote.providerId !== user._id)
-      throw new Error("غير مصرح بسحب هذا العرض");
+      throw new ConvexError("غير مصرح بسحب هذا العرض");
     if (quote.status !== "pending")
-      throw new Error("لا يمكن سحب هذا العرض");
+      throw new ConvexError("لا يمكن سحب هذا العرض");
 
     await ctx.db.patch(quoteId, { status: "withdrawn" });
 
@@ -91,27 +93,28 @@ export const accept = mutation({
   args: {
     quoteId: v.id("quotes"),
   },
+  returns: v.any(),
   handler: async (ctx, { quoteId }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
-    if (!user) throw new Error("المستخدم غير موجود");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
 
     const quote = await ctx.db.get(quoteId);
-    if (!quote) throw new Error("العرض غير موجود");
+    if (!quote) throw new ConvexError("العرض غير موجود");
     if (quote.status !== "pending")
-      throw new Error("العرض لم يعد في حالة انتظار");
+      throw new ConvexError("العرض لم يعد في حالة انتظار");
 
     const request = await ctx.db.get(quote.requestId);
-    if (!request) throw new Error("الطلب غير موجود");
+    if (!request) throw new ConvexError("الطلب غير موجود");
     if (request.customerId !== user._id)
-      throw new Error("غير مصرح بقبول هذا العرض");
+      throw new ConvexError("غير مصرح بقبول هذا العرض");
     if (request.status !== "open")
-      throw new Error("الطلب لم يعد مفتوحاً");
+      throw new ConvexError("الطلب لم يعد مفتوحاً");
 
     // Accept this quote
     await ctx.db.patch(quoteId, { status: "accepted" });
@@ -168,25 +171,26 @@ export const reject = mutation({
   args: {
     quoteId: v.id("quotes"),
   },
+  returns: v.any(),
   handler: async (ctx, { quoteId }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
-    if (!user) throw new Error("المستخدم غير موجود");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
 
     const quote = await ctx.db.get(quoteId);
-    if (!quote) throw new Error("العرض غير موجود");
+    if (!quote) throw new ConvexError("العرض غير موجود");
     if (quote.status !== "pending")
-      throw new Error("العرض لم يعد في حالة انتظار");
+      throw new ConvexError("العرض لم يعد في حالة انتظار");
 
     const request = await ctx.db.get(quote.requestId);
-    if (!request) throw new Error("الطلب غير موجود");
+    if (!request) throw new ConvexError("الطلب غير موجود");
     if (request.customerId !== user._id)
-      throw new Error("غير مصرح برفض هذا العرض");
+      throw new ConvexError("غير مصرح برفض هذا العرض");
 
     await ctx.db.patch(quoteId, { status: "rejected" });
 
@@ -204,6 +208,7 @@ export const reject = mutation({
 // List quotes by provider
 export const listByProvider = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];

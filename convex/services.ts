@@ -1,8 +1,9 @@
 import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 export const listByProvider = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
@@ -39,6 +40,7 @@ export const search = query({
     categoryId: v.optional(v.id("categories")),
     limit: v.optional(v.number()),
   },
+  returns: v.any(),
   handler: async (ctx, { term, categoryId, limit }) => {
     const maxResults = limit ?? 20;
 
@@ -107,17 +109,18 @@ export const create = mutation({
     priceType: v.union(v.literal("fixed"), v.literal("flexible")),
     price: v.number(),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
 
-    if (!user) throw new Error("المستخدم غير موجود");
-    if (!user.isProvider) throw new Error("يجب أن تكون حرفياً لإضافة خدمة");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
+    if (!user.isProvider) throw new ConvexError("يجب أن تكون حرفياً لإضافة خدمة");
 
     const serviceId = await ctx.db.insert("services", {
       providerId: user._id,
@@ -143,21 +146,22 @@ export const update = mutation({
     price: v.number(),
     isActive: v.boolean(),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
 
-    if (!user) throw new Error("المستخدم غير موجود");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
 
     const service = await ctx.db.get(args.id);
-    if (!service) throw new Error("الخدمة غير موجودة");
+    if (!service) throw new ConvexError("الخدمة غير موجودة");
     if (service.providerId !== user._id)
-      throw new Error("غير مصرح بتعديل هذه الخدمة");
+      throw new ConvexError("غير مصرح بتعديل هذه الخدمة");
 
     await ctx.db.patch(args.id, {
       title: args.title,
@@ -176,21 +180,22 @@ export const remove = mutation({
   args: {
     id: v.id("services"),
   },
+  returns: v.any(),
   handler: async (ctx, { id }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
 
-    if (!user) throw new Error("المستخدم غير موجود");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
 
     const service = await ctx.db.get(id);
-    if (!service) throw new Error("الخدمة غير موجودة");
+    if (!service) throw new ConvexError("الخدمة غير موجودة");
     if (service.providerId !== user._id)
-      throw new Error("غير مصرح بحذف هذه الخدمة");
+      throw new ConvexError("غير مصرح بحذف هذه الخدمة");
 
     await ctx.db.delete(id);
 

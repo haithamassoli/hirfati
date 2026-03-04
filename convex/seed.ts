@@ -1,7 +1,9 @@
 import { mutation } from "./_generated/server";
+import { v } from "convex/values";
 
 export const seedCategories = mutation({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     const existing = await ctx.db.query("categories").first();
     if (existing) return "Categories already seeded";

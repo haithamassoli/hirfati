@@ -1,10 +1,10 @@
 import { mutation, query, internalMutation } from "./_generated/server";
-import { v } from "convex/values";
-import { internal } from "./_generated/api";
+import { ConvexError, v } from "convex/values";
 
 // Check if a provider has an active premium subscription
 export const getActiveStatus = query({
   args: { providerId: v.optional(v.id("users")) },
+  returns: v.any(),
   handler: async (ctx, { providerId }) => {
     if (!providerId) return null;
 
@@ -33,6 +33,7 @@ export const getActiveStatus = query({
 // Get current user's premium status and order history
 export const getMyPremiumInfo = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
@@ -88,16 +89,17 @@ export const createOrder = mutation({
     type: v.union(v.literal("ad"), v.literal("visibility_boost")),
     duration: v.union(v.literal(7), v.literal(30)),
   },
+  returns: v.any(),
   handler: async (ctx, { type, duration }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
-    if (!user) throw new Error("المستخدم غير موجود");
-    if (!user.isProvider) throw new Error("هذه الخدمة متاحة فقط للحرفيين");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
+    if (!user.isProvider) throw new ConvexError("هذه الخدمة متاحة فقط للحرفيين");
 
     // Check for existing active order of same type
     const now = Date.now();
@@ -110,7 +112,7 @@ export const createOrder = mutation({
       (o) => o.type === type && o.status === "active" && o.endDate > now
     );
     if (hasActive) {
-      throw new Error("لديك اشتراك نشط من نفس النوع بالفعل");
+      throw new ConvexError("لديك اشتراك نشط من نفس النوع بالفعل");
     }
 
     // Create order as "pending" — admin will activate manually for MVP
@@ -132,13 +134,14 @@ export const activateOrder = mutation({
   args: {
     orderId: v.id("premium_orders"),
   },
+  returns: v.any(),
   handler: async (ctx, { orderId }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const order = await ctx.db.get(orderId);
-    if (!order) throw new Error("الطلب غير موجود");
-    if (order.status !== "pending") throw new Error("الطلب ليس في حالة انتظار");
+    if (!order) throw new ConvexError("الطلب غير موجود");
+    if (order.status !== "pending") throw new ConvexError("الطلب ليس في حالة انتظار");
 
     const now = Date.now();
     const endDate = now + order.duration * 24 * 60 * 60 * 1000;
@@ -161,6 +164,7 @@ export const activateOrder = mutation({
 // Internal mutation to expire premium orders (called by cron)
 export const expireOrders = internalMutation({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     const now = Date.now();
 
@@ -203,6 +207,7 @@ export const getPremiumProviders = query({
     categoryId: v.optional(v.id("categories")),
     limit: v.optional(v.number()),
   },
+  returns: v.any(),
   handler: async (ctx, { categoryId, limit = 4 }) => {
     const now = Date.now();
 

@@ -1,19 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { v } from "convex/values";
-
-// Helper to get the authenticated user
-async function getAuthUser(ctx: any) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("غير مصرح");
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_email", (q: any) => q.eq("email", identity.email!))
-    .first();
-  if (!user) throw new Error("المستخدم غير موجود");
-  return user;
-}
+import { ConvexError, v } from "convex/values";
+import { getOptionalAuthUser, requireAuthUser } from "./lib/auth";
 
 // Chat-eligible statuses: after quote submitted or direct request sent
 const CHAT_ELIGIBLE_STATUSES = [
@@ -33,23 +21,24 @@ export const send = mutation({
     jobId: v.id("jobs"),
     content: v.string(),
   },
+  returns: v.any(),
   handler: async (ctx, { jobId, content }) => {
-    const user = await getAuthUser(ctx);
+    const user = await requireAuthUser(ctx);
     const job = await ctx.db.get(jobId);
-    if (!job) throw new Error("المهمة غير موجودة");
+    if (!job) throw new ConvexError("المهمة غير موجودة");
 
     // Verify user is part of the job
     if (job.customerId !== user._id && job.providerId !== user._id) {
-      throw new Error("غير مصرح بإرسال رسالة في هذه المهمة");
+      throw new ConvexError("غير مصرح بإرسال رسالة في هذه المهمة");
     }
 
     // Verify chat is eligible
     if (!CHAT_ELIGIBLE_STATUSES.includes(job.status)) {
-      throw new Error("لا يمكن إرسال رسائل في هذه المرحلة");
+      throw new ConvexError("لا يمكن إرسال رسائل في هذه المرحلة");
     }
 
     const trimmed = content.trim();
-    if (!trimmed) throw new Error("الرسالة فارغة");
+    if (!trimmed) throw new ConvexError("الرسالة فارغة");
 
     const messageId = await ctx.db.insert("messages", {
       jobId,
@@ -78,17 +67,18 @@ export const sendImage = mutation({
     imageStorageId: v.id("_storage"),
     caption: v.optional(v.string()),
   },
+  returns: v.any(),
   handler: async (ctx, { jobId, imageStorageId, caption }) => {
-    const user = await getAuthUser(ctx);
+    const user = await requireAuthUser(ctx);
     const job = await ctx.db.get(jobId);
-    if (!job) throw new Error("المهمة غير موجودة");
+    if (!job) throw new ConvexError("المهمة غير موجودة");
 
     if (job.customerId !== user._id && job.providerId !== user._id) {
-      throw new Error("غير مصرح بإرسال رسالة في هذه المهمة");
+      throw new ConvexError("غير مصرح بإرسال رسالة في هذه المهمة");
     }
 
     if (!CHAT_ELIGIBLE_STATUSES.includes(job.status)) {
-      throw new Error("لا يمكن إرسال رسائل في هذه المرحلة");
+      throw new ConvexError("لا يمكن إرسال رسائل في هذه المرحلة");
     }
 
     const messageId = await ctx.db.insert("messages", {
@@ -115,14 +105,9 @@ export const sendImage = mutation({
 // Real-time query: fetch messages by jobId
 export const listByJob = query({
   args: { jobId: v.id("jobs") },
+  returns: v.any(),
   handler: async (ctx, { jobId }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return [];
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
-      .first();
+    const user = await getOptionalAuthUser(ctx);
     if (!user) return [];
 
     const job = await ctx.db.get(jobId);

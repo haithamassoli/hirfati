@@ -8,6 +8,7 @@ export const list = query({
       v.union(v.literal("amman"), v.literal("irbid"), v.literal("zarqa"))
     ),
   },
+  returns: v.any(),
   handler: async (ctx, { categoryId, city }) => {
     let providers = await ctx.db
       .query("users")
@@ -102,6 +103,7 @@ export const search = query({
     ),
     limit: v.optional(v.number()),
   },
+  returns: v.any(),
   handler: async (ctx, { term, city, limit }) => {
     const maxResults = limit ?? 20;
 
@@ -214,6 +216,7 @@ export const search = query({
 
 export const getById = query({
   args: { id: v.id("users") },
+  returns: v.any(),
   handler: async (ctx, { id }) => {
     const provider = await ctx.db.get(id);
     if (!provider || !provider.isProvider) return null;
@@ -303,6 +306,7 @@ export const getById = query({
 
 export const listFeatured = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     const providers = await ctx.db
       .query("users")

@@ -1,8 +1,10 @@
 import { query } from "./_generated/server";
+import { v } from "convex/values";
 
 // Dashboard summary data for the authenticated user
 export const getSummary = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;

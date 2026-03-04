@@ -3,6 +3,7 @@ import { v } from "convex/values";
 
 export const list = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     return await ctx.db
       .query("categories")
@@ -13,6 +14,7 @@ export const list = query({
 
 export const listMain = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     const all = await ctx.db
       .query("categories")
@@ -24,6 +26,7 @@ export const listMain = query({
 
 export const getBySlug = query({
   args: { slug: v.string() },
+  returns: v.any(),
   handler: async (ctx, { slug }) => {
     return await ctx.db
       .query("categories")
@@ -34,6 +37,7 @@ export const getBySlug = query({
 
 export const getSubcategories = query({
   args: { parentId: v.id("categories") },
+  returns: v.any(),
   handler: async (ctx, { parentId }) => {
     return await ctx.db
       .query("categories")

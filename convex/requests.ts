@@ -1,5 +1,5 @@
 import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 export const listOpen = query({
   args: {
@@ -8,6 +8,7 @@ export const listOpen = query({
       v.union(v.literal("amman"), v.literal("irbid"), v.literal("zarqa"))
     ),
   },
+  returns: v.any(),
   handler: async (ctx, { categoryId, city }) => {
     let requests;
 
@@ -74,6 +75,7 @@ export const listOpen = query({
 // List requests by the current authenticated customer
 export const listByCustomer = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
@@ -119,6 +121,7 @@ export const listForProvider = query({
       v.union(v.literal("amman"), v.literal("irbid"), v.literal("zarqa"))
     ),
   },
+  returns: v.any(),
   handler: async (ctx, { categoryId, city }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
@@ -195,6 +198,7 @@ export const search = query({
     categoryId: v.optional(v.id("categories")),
     limit: v.optional(v.number()),
   },
+  returns: v.any(),
   handler: async (ctx, { term, city, categoryId, limit }) => {
     const maxResults = limit ?? 20;
 
@@ -249,15 +253,16 @@ export const create = mutation({
     budgetMax: v.number(),
     photos: v.optional(v.array(v.id("_storage"))),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
-    if (!user) throw new Error("المستخدم غير موجود");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
 
     const requestId = await ctx.db.insert("requests", {
       customerId: user._id,
@@ -278,6 +283,7 @@ export const create = mutation({
 // Get request detail with quotes (for customer - shows all quotes with provider info)
 export const getDetailForCustomer = query({
   args: { id: v.id("requests") },
+  returns: v.any(),
   handler: async (ctx, { id }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
@@ -348,6 +354,7 @@ export const getDetailForCustomer = query({
 
 export const getById = query({
   args: { id: v.id("requests") },
+  returns: v.any(),
   handler: async (ctx, { id }) => {
     const request = await ctx.db.get(id);
     if (!request) return null;

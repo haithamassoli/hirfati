@@ -1,8 +1,9 @@
 import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 export const getCurrentUser = query({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
@@ -65,16 +66,17 @@ export const updateProfile = mutation({
       )
     ),
   },
+  returns: v.any(),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
 
-    if (!user) throw new Error("المستخدم غير موجود");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
 
     // Determine if profile is complete for providers
     const isProfileComplete =
@@ -102,15 +104,16 @@ export const updateProfile = mutation({
 // Toggle role between customer and provider (for dashboard view switching)
 export const toggleRole = mutation({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
-    if (!user) throw new Error("المستخدم غير موجود");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
 
     const newIsProvider = !user.isProvider;
 
@@ -136,16 +139,17 @@ export const updateAvatar = mutation({
   args: {
     storageId: v.id("_storage"),
   },
+  returns: v.any(),
   handler: async (ctx, { storageId }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
 
-    if (!user) throw new Error("المستخدم غير موجود");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
 
     // Delete old avatar from storage if it exists
     if (user.avatarStorageId) {
@@ -168,16 +172,17 @@ export const addPortfolioImage = mutation({
     storageId: v.id("_storage"),
     caption: v.optional(v.string()),
   },
+  returns: v.any(),
   handler: async (ctx, { storageId, caption }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
 
-    if (!user) throw new Error("المستخدم غير موجود");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
 
     const portfolio = user.portfolio ?? [];
     portfolio.push({ imageStorageId: storageId, caption });
@@ -193,16 +198,17 @@ export const updatePortfolioCaption = mutation({
     imageStorageId: v.id("_storage"),
     caption: v.string(),
   },
+  returns: v.any(),
   handler: async (ctx, { imageStorageId, caption }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
 
-    if (!user) throw new Error("المستخدم غير موجود");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
 
     const portfolio = (user.portfolio ?? []).map((item) =>
       item.imageStorageId === imageStorageId ? { ...item, caption } : item
@@ -218,16 +224,17 @@ export const deletePortfolioImage = mutation({
   args: {
     imageStorageId: v.id("_storage"),
   },
+  returns: v.any(),
   handler: async (ctx, { imageStorageId }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
 
-    if (!user) throw new Error("المستخدم غير موجود");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
 
     const portfolio = (user.portfolio ?? []).filter(
       (item) => item.imageStorageId !== imageStorageId
@@ -244,16 +251,17 @@ export const reorderPortfolio = mutation({
   args: {
     orderedStorageIds: v.array(v.id("_storage")),
   },
+  returns: v.any(),
   handler: async (ctx, { orderedStorageIds }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("غير مصرح");
+    if (!identity) throw new ConvexError("غير مصرح");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", identity.email!))
       .first();
 
-    if (!user) throw new Error("المستخدم غير موجود");
+    if (!user) throw new ConvexError("المستخدم غير موجود");
 
     const portfolioMap = new Map(
       (user.portfolio ?? []).map((item) => [item.imageStorageId, item])

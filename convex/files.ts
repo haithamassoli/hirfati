@@ -3,6 +3,7 @@ import { v } from "convex/values";
 
 export const generateUploadUrl = mutation({
   args: {},
+  returns: v.any(),
   handler: async (ctx) => {
     return await ctx.storage.generateUploadUrl();
   },
@@ -10,6 +11,7 @@ export const generateUploadUrl = mutation({
 
 export const getFileUrl = query({
   args: { storageId: v.id("_storage") },
+  returns: v.any(),
   handler: async (ctx, { storageId }) => {
     return await ctx.storage.getUrl(storageId);
   },
