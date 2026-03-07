@@ -14,6 +14,7 @@ import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as files from "../files.js";
 import type * as jobs from "../jobs.js";
+import type * as lib_auth from "../lib/auth.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
 import type * as premium from "../premium.js";
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   dashboard: typeof dashboard;
   files: typeof files;
   jobs: typeof jobs;
+  "lib/auth": typeof lib_auth;
   messages: typeof messages;
   notifications: typeof notifications;
   premium: typeof premium;
