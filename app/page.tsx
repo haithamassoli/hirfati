@@ -7,7 +7,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { StarRating } from "@/components/ui/star-rating";
-import { authClient } from "@/lib/auth-client";
+import { buildAuthHref } from "@/lib/auth-redirect";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { PremiumBanner } from "@/components/premium/premium-banner";
@@ -408,12 +408,7 @@ export default function HomePage() {
             variant="accent"
             size="lg"
             className="text-base"
-            onClick={() =>
-              authClient.signIn.social({
-                provider: "google",
-                callbackURL: "/dashboard",
-              })
-            }
+            onClick={() => router.push(buildAuthHref("/dashboard"))}
           >
             سجّل كحرفي مجاناً
             <ArrowLeft className="h-5 w-5" />

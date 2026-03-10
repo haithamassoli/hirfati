@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RequestCardSkeleton } from "@/components/ui/skeleton";
 import { cityLabels } from "@/lib/constants";
-import { authClient } from "@/lib/auth-client";
+import { buildAuthHref } from "@/lib/auth-redirect";
 import {
   MapPin,
   MessageSquare,
@@ -199,12 +199,9 @@ export default function RequestsPage() {
               </p>
               <Button
                 variant="primary"
-                onClick={() =>
-                  authClient.signIn.social({
-                    provider: "google",
-                    callbackURL: "/dashboard",
-                  })
-                }
+                onClick={() => {
+                  window.location.href = buildAuthHref("/dashboard");
+                }}
               >
                 أنشئ طلب خدمة
               </Button>

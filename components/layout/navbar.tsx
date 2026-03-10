@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { buildAuthHref } from "@/lib/auth-redirect";
 import { Wrench, Menu, X, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -65,24 +66,14 @@ export function Navbar() {
                   variant="ghost"
                   size="sm"
                   className="hidden sm:inline-flex"
-                  onClick={() =>
-                    authClient.signIn.social({
-                      provider: "google",
-                      callbackURL: "/dashboard",
-                    })
-                  }
+                  onClick={() => router.push(buildAuthHref("/dashboard"))}
                 >
                   تسجيل الدخول
                 </Button>
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() =>
-                    authClient.signIn.social({
-                      provider: "google",
-                      callbackURL: "/dashboard",
-                    })
-                  }
+                  onClick={() => router.push(buildAuthHref("/dashboard"))}
                 >
                   ابدأ الآن
                 </Button>

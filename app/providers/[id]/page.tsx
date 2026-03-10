@@ -11,6 +11,7 @@ import { StarRating } from "@/components/ui/star-rating";
 import { Spinner } from "@/components/ui/spinner";
 import { cityLabels } from "@/lib/constants";
 import { authClient } from "@/lib/auth-client";
+import { buildAuthHref } from "@/lib/auth-redirect";
 import {
   MapPin,
   Crown,
@@ -231,10 +232,7 @@ export default function ProviderProfilePage({
                   if (session) {
                     setShowHireModal(true);
                   } else {
-                    authClient.signIn.social({
-                      provider: "google",
-                      callbackURL: `/providers/${id}`,
-                    });
+                    window.location.href = buildAuthHref(`/providers/${id}`);
                   }
                 }}
               >
@@ -459,10 +457,7 @@ export default function ProviderProfilePage({
                   if (session) {
                     setShowHireModal(true);
                   } else {
-                    authClient.signIn.social({
-                      provider: "google",
-                      callbackURL: `/providers/${id}`,
-                    });
+                    window.location.href = buildAuthHref(`/providers/${id}`);
                   }
                 }}
               >

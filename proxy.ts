@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { buildAuthHref } from "@/lib/auth-redirect";
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -11,9 +12,10 @@ export function proxy(request: NextRequest) {
       request.cookies.get("__Secure-better-auth.session_token");
 
     if (!sessionCookie) {
-      const loginUrl = new URL("/", request.url);
-      loginUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(loginUrl);
+      const redirectTarget = `${pathname}${request.nextUrl.search}`;
+      return NextResponse.redirect(
+        new URL(buildAuthHref(redirectTarget), request.url)
+      );
     }
   }
 

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { cityLabels } from "@/lib/constants";
-import { authClient } from "@/lib/auth-client";
+import { buildAuthHref } from "@/lib/auth-redirect";
 import {
   MapPin,
   MessageSquare,
@@ -248,12 +248,9 @@ export default function RequestDetailPage({
                   variant="primary"
                   size="lg"
                   className="w-full"
-                  onClick={() =>
-                    authClient.signIn.social({
-                      provider: "google",
-                      callbackURL: "/dashboard",
-                    })
-                  }
+                  onClick={() => {
+                    window.location.href = buildAuthHref("/dashboard");
+                  }}
                 >
                   <Send className="h-5 w-5" />
                   قدّم عرض سعر
