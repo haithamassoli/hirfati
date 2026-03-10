@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.10.13",
+    "@tanstack/react-form": "^1.28.4",
+    "@tanstack/react-form-nextjs": "^1.28.4",
     "better-auth": "^1.4.9",
     "clsx": "^2.1.1",
     "convex": "^1.32.0",
@@ -19,7 +21,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "tailwind-merge": "^3.5.0",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@convex-dev/eslint-plugin": "latest",

@@ -11,7 +11,7 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
   return betterAuth({
     database: authComponent.adapter(ctx),
     emailAndPassword: {
-      enabled: false,
+      enabled: true,
     },
     socialProviders: {
       google: {
